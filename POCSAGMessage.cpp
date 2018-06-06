@@ -20,6 +20,7 @@
 
 #include <cstdio>
 #include <cassert>
+#include <cstring>
 
 CPOCSAGMessage::CPOCSAGMessage(POCSAG_TYPE type, unsigned int ric, unsigned char functional, unsigned char* message, unsigned int length) :
 m_type(type),
