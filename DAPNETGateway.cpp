@@ -249,7 +249,7 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			LogDebug("Queueing message to %06X: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
+			LogDebug("Queueing message to %07d: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
 			m_queue.push_front(message);
 		}
 
@@ -299,7 +299,7 @@ bool CDAPNETGateway::sendData()
 	if (!m_queue.empty()) {
 		CPOCSAGMessage* message = m_queue.back();
 		m_queue.pop_back();
-		LogDebug("Sending message to %06X: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
+		LogDebug("Sending message to %07d: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
 		m_pocsagNetwork->write(message);
 		delete message;
 		return true;
