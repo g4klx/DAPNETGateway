@@ -170,7 +170,7 @@ bool CDAPNETNetwork::write(unsigned char* data)
 	unsigned int length = ::strlen((char*)data);
 
 	if (m_debug)
-		CUtils::dump(1U, "DAPNET data Transmitted", data, length);
+		CUtils::dump(1U, "DAPNET Data Transmitted", data, length);
 
 	bool ok = m_socket.write(data, length);
 	if (!ok)
