@@ -112,7 +112,7 @@ bool CDAPNETNetwork::read()
 		char* p2 = ::strtok(NULL, ":\r\n");
 		char* p3 = ::strtok(NULL, ":\r\n");
 		char* p4 = ::strtok(NULL, ":\r\n");
-		char* p5 = ::strtok(NULL, ":\r\n");
+		char* p5 = ::strtok(NULL, "\r\n");
 
 		if (p1 == NULL || p2 == NULL || p3 == NULL || p4 == NULL || p5 == NULL) {
 			CUtils::dump(3U, "Received a malformed message from DAPNET", buffer, length);
@@ -125,7 +125,7 @@ bool CDAPNETNetwork::read()
 		} else {
 			unsigned int type  = ::strtoul(p1, NULL, 10);
 			unsigned int speed = ::strtoul(p2, NULL, 10);
-			unsigned int addr  = ::strtoul(p3, NULL, 10);
+			unsigned int addr  = ::strtoul(p3, NULL, 16);
 			unsigned int func  = ::strtoul(p4, NULL, 10);
 
 			m_message = new CPOCSAGMessage(type == 1U ? TYPE_ALPHA_NUMERIC : TYPE_NUMERIC, addr, func, (unsigned char*)p5, ::strlen(p5));
