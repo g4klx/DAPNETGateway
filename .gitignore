@@ -1,0 +1,16 @@
+Debug
+Release
+x64
+DAPNETGateway
+*.o
+*.opendb
+*.bak
+*.obj
+*~
+*.sdf
+*.log
+*.zip
+*.exe
+*.user
+*.VC.db
+.vs
