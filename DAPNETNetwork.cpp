@@ -57,7 +57,7 @@ bool CDAPNETNetwork::login()
 	LogMessage("Logging into DAPNET");
 
 	char login[200U];
-	::snprintf(login, 200, "[MMDVM %s %s %s]\r\n", m_version, m_callsign.c_str(), m_authKey.c_str());
+	::snprintf(login, 200, "[MMDVM v%s %s %s]\r\n", m_version, m_callsign.c_str(), m_authKey.c_str());
 
 	return write((unsigned char*)login);
 }
@@ -67,7 +67,9 @@ bool CDAPNETNetwork::read()
 	unsigned char buffer[BUFFER_LENGTH];
 
 	int length = m_socket.read(buffer, BUFFER_LENGTH, 0U);
-	if (length < 0)
+	if (length == -1)		// Error
+		return false;
+	if (length == -2)		// Connection lost
 		return false;
 	if (length == 0)
 		return true;
@@ -80,14 +82,12 @@ bool CDAPNETNetwork::read()
 
 	if (buffer[0U] == '+') {
 		// Success
-		return true;
 	} else if (buffer[0U] == '-') {
 		// Error
 		LogWarning("An error has been reported by DAPNET");
-		return true;
 	} else if (buffer[0U] == '2') {
 		// Time synchronisation
-		char* p = ::strchr((char*)buffer, '\r');
+		char* p = ::strchr((char*)buffer, '\n');
 		if (p != NULL)
 			::strcpy(p, ":0000\r\n");
 		else
@@ -172,5 +172,9 @@ bool CDAPNETNetwork::write(unsigned char* data)
 	if (m_debug)
 		CUtils::dump(1U, "DAPNET data Transmitted", data, length);
 
-	return m_socket.write(data, length);
+	bool ok = m_socket.write(data, length);
+	if (!ok)
+		LogWarning("Error when writing to DAPNET");
+
+	return ok;
 }

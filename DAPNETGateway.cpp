@@ -244,11 +244,8 @@ int CDAPNETGateway::run()
 		}
 
 		bool ok = m_dapnetNetwork->read();
-		if (!ok) {
-			m_dapnetNetwork->close();
-			m_dapnetNetwork->open();
-			m_dapnetNetwork->login();
-		}
+		if (!ok)
+			recover();
 
 		unsigned int ms = stopWatch.elapsed();
 		stopWatch.start();
