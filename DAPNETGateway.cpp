@@ -299,7 +299,7 @@ bool CDAPNETGateway::sendData()
 	if (!m_queue.empty()) {
 		CPOCSAGMessage* message = m_queue.back();
 		m_queue.pop_back();
-		LogDebug("Sending message to %06X: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
+		LogDebug("Sending message to %07d: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
 		m_pocsagNetwork->write(message);
 		delete message;
 		return true;
