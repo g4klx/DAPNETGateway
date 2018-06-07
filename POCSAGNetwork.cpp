@@ -64,8 +64,8 @@ bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
 	data[7U] = message->m_ric >> 8;
 	data[8U] = message->m_ric >> 0;
 
-	data[9U]  = (message->m_type == TYPE_ALPHA_NUMERIC) ? 0x01U : 0x00U;
-	data[9U] |= (message->m_functional << 1) & 0x06U;
+	data[9U]  = (message->m_type << 0) & 0xF0U;
+	data[9U] |= (message->m_functional << 4) & 0x0FU;
 
 	::memcpy(data + 10U, message->m_message, message->m_length);
 

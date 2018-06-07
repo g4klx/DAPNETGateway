@@ -85,7 +85,10 @@ m_queue()
 
 CDAPNETGateway::~CDAPNETGateway()
 {
-	// XXX Free any data in the queue
+	for (std::deque<CPOCSAGMessage*>::iterator it = m_queue.begin(); it != m_queue.end(); ++it)
+		delete *it;
+
+	m_queue.clear();
 }
 
 int CDAPNETGateway::run()
@@ -249,7 +252,7 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			LogDebug("Queueing message to %07d: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
+			LogDebug("Queueing message to %07u, type %u, func %u: \"%.*s\"", message->m_ric, message->m_type, message->m_functional, message->m_length, message->m_message);
 			m_queue.push_front(message);
 		}
 
@@ -299,7 +302,7 @@ bool CDAPNETGateway::sendData()
 	if (!m_queue.empty()) {
 		CPOCSAGMessage* message = m_queue.back();
 		m_queue.pop_back();
-		LogDebug("Sending message to %07d: \"%.*s\"", message->m_ric, message->m_length, message->m_message);
+		LogDebug("Sending message to %07u, type %u, func %u: \"%.*s\"", message->m_ric, message->m_type, message->m_functional, message->m_length, message->m_message);
 		m_pocsagNetwork->write(message);
 		delete message;
 		return true;

@@ -128,7 +128,7 @@ bool CDAPNETNetwork::read()
 			unsigned int addr  = ::strtoul(p3, NULL, 16);
 			unsigned int func  = ::strtoul(p4, NULL, 10);
 
-			m_message = new CPOCSAGMessage(type == 1U ? TYPE_ALPHA_NUMERIC : TYPE_NUMERIC, addr, func, (unsigned char*)p5, ::strlen(p5));
+			m_message = new CPOCSAGMessage(type, addr, func, (unsigned char*)p5, ::strlen(p5));
 
 			id = (id + 1U) % 256UL;
 

@@ -22,17 +22,12 @@
 #include <cstdint>
 #include <string>
 
-enum POCSAG_TYPE {
-	TYPE_ALPHA_NUMERIC,
-	TYPE_NUMERIC
-};
-
 class CPOCSAGMessage {
 public:
-	CPOCSAGMessage(POCSAG_TYPE type, unsigned int ric, unsigned char functional, unsigned char* message, unsigned int length);
+	CPOCSAGMessage(unsigned char type, unsigned int ric, unsigned char functional, unsigned char* message, unsigned int length);
 	~CPOCSAGMessage();
 
-	POCSAG_TYPE    m_type;
+	unsigned char  m_type;
 	unsigned int   m_ric;
 	unsigned char  m_functional;
 	unsigned char* m_message;

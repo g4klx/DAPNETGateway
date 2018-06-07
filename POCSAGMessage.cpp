@@ -22,7 +22,7 @@
 #include <cassert>
 #include <cstring>
 
-CPOCSAGMessage::CPOCSAGMessage(POCSAG_TYPE type, unsigned int ric, unsigned char functional, unsigned char* message, unsigned int length) :
+CPOCSAGMessage::CPOCSAGMessage(unsigned char type, unsigned int ric, unsigned char functional, unsigned char* message, unsigned int length) :
 m_type(type),
 m_ric(ric),
 m_functional(functional),
