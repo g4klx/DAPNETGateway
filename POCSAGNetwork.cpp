@@ -64,12 +64,14 @@ bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
 	data[7U] = message->m_ric >> 8;
 	data[8U] = message->m_ric >> 0;
 
-	::memcpy(data + 9U, message->m_message, message->m_length);
+	data[9U] = message->m_functional;
+
+	::memcpy(data + 10U, message->m_message, message->m_length);
 
 	if (m_debug)
-		CUtils::dump(1U, "POCSAG Network Data Sent", data, message->m_length + 9U);
+		CUtils::dump(1U, "POCSAG Network Data Sent", data, message->m_length + 10U);
 
-	return m_socket.write(data, message->m_length + 9U, m_address, m_port);
+	return m_socket.write(data, message->m_length + 10U, m_address, m_port);
 }
 
 unsigned int CPOCSAGNetwork::read(unsigned char* data)
