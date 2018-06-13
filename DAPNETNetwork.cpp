@@ -106,7 +106,7 @@ bool CDAPNETNetwork::read()
 		return write((unsigned char*)"+\r\n");
 	} else if (buffer[0U] == '#') {
 		// A message
-		unsigned long id = ::strtoul((char*)buffer + 1U, NULL, 16);
+		unsigned int id = ::strtoul((char*)buffer + 1U, NULL, 16);
 
 		char* p1 = ::strtok((char*)buffer + 4U, ":\r\n");
 		char* p2 = ::strtok(NULL, ":\r\n");
@@ -123,10 +123,9 @@ bool CDAPNETNetwork::read()
 			::snprintf(reply, 20U, "#%02X -\r\n", id);
 			return write((unsigned char*)reply);
 		} else {
-			unsigned int type  = ::strtoul(p1, NULL, 10);
-			unsigned int speed = ::strtoul(p2, NULL, 10);
-			unsigned int addr  = ::strtoul(p3, NULL, 16);
-			unsigned int func  = ::strtoul(p4, NULL, 10);
+			unsigned int type = ::strtoul(p1, NULL, 10);
+			unsigned int addr = ::strtoul(p3, NULL, 16);
+			unsigned int func = ::strtoul(p4, NULL, 10);
 
 			m_message = new CPOCSAGMessage(type, addr, func, (unsigned char*)p5, ::strlen(p5));
 
