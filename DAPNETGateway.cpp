@@ -255,9 +255,12 @@ int CDAPNETGateway::run()
 					m_queue.push_front(message);
 				} else {
 					LogDebug("Rejecting message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+					delete message;
 				}
 			} else {
 				LogMessage("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+				m_pocsagNetwork->write(message);
+				delete message;
 			}
 		}
 
