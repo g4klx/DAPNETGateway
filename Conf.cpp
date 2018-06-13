@@ -48,6 +48,7 @@ m_logFileRoot(),
 m_dapnetAddress(),
 m_dapnetPort(0U),
 m_dapnetAuthKey(),
+m_dapnetSuppressTime(true),
 m_dapnetDebug(false)
 {
 }
@@ -118,6 +119,8 @@ bool CConf::read()
 			m_dapnetPort = (unsigned int)::atoi(value);
 		else if (::strcmp(key, "AuthKey") == 0)
 			m_dapnetAuthKey = value;
+		else if (::strcmp(key, "SuppressTimeWhenBusy") == 0)
+			m_dapnetSuppressTime = ::atoi(value) == 1;
 		else if (::strcmp(key, "Debug") == 0)
 			m_dapnetDebug = ::atoi(value) == 1;
 	}
@@ -193,7 +196,13 @@ std::string CConf::getDAPNETAuthKey() const
 	return m_dapnetAuthKey;
 }
 
+bool CConf::getDAPNETSuppressTime() const
+{
+	return m_dapnetSuppressTime;
+}
+
 bool CConf::getDAPNETDebug() const
 {
 	return m_dapnetDebug;
 }
+

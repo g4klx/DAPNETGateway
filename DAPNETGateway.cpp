@@ -49,8 +49,6 @@ const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 const unsigned char FUNCTIONAL_NUMERIC      = 0U;
 const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
 
-const unsigned int FRAME_TIME = 1000U * (17U * 32U) / 1200U;
-
 int main(int argc, char** argv)
 {
 	const char* iniFile = DEFAULT_INI_FILE;
@@ -218,14 +216,10 @@ int CDAPNETGateway::run()
 
 	::LogMessage("Logged into the DAPNET network");
 
-	CTimer messageTimer(1000U, 0U, FRAME_TIME);
+	CTimer messageTimer(1000U, 0U, 200U);
 
 	CStopWatch stopWatch;
 	stopWatch.start();
-
-	unsigned int calls = 0U;
-
-	bool tx = false;
 
 	LogMessage("Starting DAPNETGateway-%s", VERSION);
 
@@ -255,8 +249,16 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-			m_queue.push_front(message);
+			if (!messageTimer.isRunning() || !m_queue.empty()) {
+				if (!isTimeMessage(message)) {
+					LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+					m_queue.push_front(message);
+				} else {
+					LogDebug("Rejecting message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+				}
+			} else {
+				LogMessage("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+			}
 		}
 
 		unsigned int ms = stopWatch.elapsed();
@@ -264,21 +266,8 @@ int CDAPNETGateway::run()
 
 		messageTimer.clock(ms);
 		if (messageTimer.isRunning() && messageTimer.hasExpired()) {
-			if (!m_queue.empty()) {
-				if (!tx)
-					calls = 0U;
-
-				tx = true;
-
+			if (!m_queue.empty())
 				sendData();
-
-				calls++;
-			} else {
-				if (tx)
-					LogMessage("Sent %u messages within that batch", calls);
-
-				tx = false;
-			}
 
 			messageTimer.start();
 		}
@@ -305,7 +294,7 @@ bool CDAPNETGateway::sendData()
 	if (!m_queue.empty()) {
 		CPOCSAGMessage* message = m_queue.back();
 		m_queue.pop_back();
-		LogDebug("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+		LogMessage("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
 		m_pocsagNetwork->write(message);
 		delete message;
 		return true;
@@ -328,3 +317,15 @@ bool CDAPNETGateway::recover()
 
 	return false;
 }
+
+bool CDAPNETGateway::isTimeMessage(const CPOCSAGMessage* message) const
+{
+	if (message->m_type == 5U && message->m_functional == FUNCTIONAL_NUMERIC)
+		return true;
+
+	if (message->m_type == 6U && message->m_functional == FUNCTIONAL_ALPHANUMERIC && ::memcmp(message->m_message, "XTIME=", 6U) == 0)
+		return true;
+
+	return false;
+}
+

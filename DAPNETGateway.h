@@ -43,6 +43,8 @@ private:
 
 	bool sendData();
 	bool recover();
+	bool isTimeMessage(const CPOCSAGMessage* message) const;
 };
 
 #endif
+
