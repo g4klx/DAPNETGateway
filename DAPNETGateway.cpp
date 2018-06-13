@@ -46,6 +46,9 @@ const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 #include <cassert>
 #include <cmath>
 
+const unsigned char FUNCTIONAL_NUMERIC      = 0U;
+const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
+
 const unsigned int FRAME_TIME = 1000U * (17U * 32U) / 1200U;
 
 int main(int argc, char** argv)
@@ -252,7 +255,7 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			LogDebug("Queueing message to %07u, type %u, func %u: \"%.*s\"", message->m_ric, message->m_type, message->m_functional, message->m_length, message->m_message);
+			LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
 			m_queue.push_front(message);
 		}
 
@@ -302,7 +305,7 @@ bool CDAPNETGateway::sendData()
 	if (!m_queue.empty()) {
 		CPOCSAGMessage* message = m_queue.back();
 		m_queue.pop_back();
-		LogDebug("Sending message to %07u, type %u, func %u: \"%.*s\"", message->m_ric, message->m_type, message->m_functional, message->m_length, message->m_message);
+		LogDebug("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
 		m_pocsagNetwork->write(message);
 		delete message;
 		return true;
