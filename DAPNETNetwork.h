@@ -37,6 +37,8 @@ public:
 
 	bool read();
 
+	bool* readSchedule();
+
 	CPOCSAGMessage* readMessage();
 
 	void close();
@@ -48,7 +50,10 @@ private:
 	const char*     m_version;
 	bool            m_debug;
 	CPOCSAGMessage* m_message;
+	bool*           m_schedule;
 
+	bool parseMessage(unsigned char* data, unsigned int length);
+	bool parseSchedule(unsigned char* data);
 	bool write(unsigned char* data);
 };
 

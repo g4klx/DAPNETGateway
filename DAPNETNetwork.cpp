@@ -33,7 +33,8 @@ m_callsign(callsign),
 m_authKey(authKey),
 m_version(version),
 m_debug(debug),
-m_message(NULL)
+m_message(NULL),
+m_schedule(NULL)
 {
 	assert(!callsign.empty());
 	assert(!authKey.empty());
@@ -42,7 +43,8 @@ m_message(NULL)
 
 CDAPNETNetwork::~CDAPNETNetwork()
 {
-	delete m_message;
+	delete   m_message;
+	delete[] m_schedule;
 }
 
 bool CDAPNETNetwork::open()
@@ -103,44 +105,25 @@ bool CDAPNETNetwork::read()
 		return write((unsigned char*)"+\r\n");
 	} else if (buffer[0U] == '4') {
 		// Timeslot information
-		return write((unsigned char*)"+\r\n");
+		return parseSchedule(buffer);
 	} else if (buffer[0U] == '#') {
 		// A message
-		unsigned int id = ::strtoul((char*)buffer + 1U, NULL, 16);
-
-		char* p1 = ::strtok((char*)buffer + 4U, ":\r\n");
-		char* p2 = ::strtok(NULL, ":\r\n");
-		char* p3 = ::strtok(NULL, ":\r\n");
-		char* p4 = ::strtok(NULL, ":\r\n");
-		char* p5 = ::strtok(NULL, "\r\n");
-
-		if (p1 == NULL || p2 == NULL || p3 == NULL || p4 == NULL || p5 == NULL) {
-			CUtils::dump(3U, "Received a malformed message from DAPNET", buffer, length);
-
-			id = (id + 1U) % 256UL;
-
-			char reply[20U];
-			::snprintf(reply, 20U, "#%02X -\r\n", id);
-			return write((unsigned char*)reply);
-		} else {
-			unsigned int type = ::strtoul(p1, NULL, 10);
-			unsigned int addr = ::strtoul(p3, NULL, 16);
-			unsigned int func = ::strtoul(p4, NULL, 10);
-
-			m_message = new CPOCSAGMessage(type, addr, func, (unsigned char*)p5, ::strlen(p5));
-
-			id = (id + 1U) % 256UL;
-
-			char reply[20U];
-			::snprintf(reply, 20U, "#%02X +\r\n", id);
-			return write((unsigned char*)reply);
-		}
+		return parseMessage(buffer, length);
 	} else {
 		CUtils::dump(3U, "An unknown message from DAPNET", buffer, length);
 		return write((unsigned char*)"-\r\n");
 	}
 
 	return true;
+}
+
+bool* CDAPNETNetwork::readSchedule()
+{
+	bool* schedule = m_schedule;
+
+	m_schedule = NULL;
+
+	return schedule;
 }
 
 CPOCSAGMessage* CDAPNETNetwork::readMessage()
@@ -176,4 +159,87 @@ bool CDAPNETNetwork::write(unsigned char* data)
 		LogWarning("Error when writing to DAPNET");
 
 	return ok;
+}
+
+bool CDAPNETNetwork::parseMessage(unsigned char* buffer, unsigned int length)
+{
+	assert(buffer != NULL);
+
+	unsigned int id = ::strtoul((char*)buffer + 1U, NULL, 16);
+
+	char* p1 = ::strtok((char*)buffer + 4U, ":\r\n");
+	char* p2 = ::strtok(NULL, ":\r\n");
+	char* p3 = ::strtok(NULL, ":\r\n");
+	char* p4 = ::strtok(NULL, ":\r\n");
+	char* p5 = ::strtok(NULL, "\r\n");
+
+	if (p1 == NULL || p2 == NULL || p3 == NULL || p4 == NULL || p5 == NULL) {
+		CUtils::dump(3U, "Received a malformed message from DAPNET", buffer, length);
+
+		id = (id + 1U) % 256UL;
+
+		char reply[20U];
+		::snprintf(reply, 20U, "#%02X -\r\n", id);
+		return write((unsigned char*)reply);
+	} else {
+		unsigned int type = ::strtoul(p1, NULL, 10);
+		unsigned int addr = ::strtoul(p3, NULL, 16);
+		unsigned int func = ::strtoul(p4, NULL, 10);
+
+		m_message = new CPOCSAGMessage(type, addr, func, (unsigned char*)p5, ::strlen(p5));
+
+		id = (id + 1U) % 256UL;
+
+		char reply[20U];
+		::snprintf(reply, 20U, "#%02X +\r\n", id);
+		return write((unsigned char*)reply);
+	}
+}
+
+bool CDAPNETNetwork::parseSchedule(unsigned char* data)
+{
+	assert(data != NULL);
+
+	LogMessage("Schedule information received: %s", data + 2U);
+
+	delete[] m_schedule;
+	m_schedule = new bool[16U];
+
+	for (unsigned int i = 0U; i < 16U; i++)
+		m_schedule[i] = false;
+
+	if (::strchr((char*)data + 2U, '0') != NULL)
+		m_schedule[0U] = true;
+	if (::strchr((char*)data + 2U, '1') != NULL)
+		m_schedule[1U] = true;
+	if (::strchr((char*)data + 2U, '2') != NULL)
+		m_schedule[2U] = true;
+	if (::strchr((char*)data + 2U, '3') != NULL)
+		m_schedule[3U] = true;
+	if (::strchr((char*)data + 2U, '4') != NULL)
+		m_schedule[4U] = true;
+	if (::strchr((char*)data + 2U, '5') != NULL)
+		m_schedule[5U] = true;
+	if (::strchr((char*)data + 2U, '6') != NULL)
+		m_schedule[6U] = true;
+	if (::strchr((char*)data + 2U, '7') != NULL)
+		m_schedule[7U] = true;
+	if (::strchr((char*)data + 2U, '8') != NULL)
+		m_schedule[8U] = true;
+	if (::strchr((char*)data + 2U, '9') != NULL)
+		m_schedule[9U] = true;
+	if (::strchr((char*)data + 2U, 'A') != NULL)
+		m_schedule[10U] = true;
+	if (::strchr((char*)data + 2U, 'B') != NULL)
+		m_schedule[11U] = true;
+	if (::strchr((char*)data + 2U, 'C') != NULL)
+		m_schedule[12U] = true;
+	if (::strchr((char*)data + 2U, 'D') != NULL)
+		m_schedule[13U] = true;
+	if (::strchr((char*)data + 2U, 'E') != NULL)
+		m_schedule[14U] = true;
+	if (::strchr((char*)data + 2U, 'F') != NULL)
+		m_schedule[15U] = true;
+
+	return write((unsigned char*)"+\r\n");
 }
