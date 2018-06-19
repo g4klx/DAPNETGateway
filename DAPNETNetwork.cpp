@@ -200,7 +200,10 @@ bool CDAPNETNetwork::parseSchedule(unsigned char* data)
 {
 	assert(data != NULL);
 
-	LogMessage("Schedule information received: %s", data + 2U);
+	char* p = ::strtok((char*)data + 2U, "\r\n");
+	assert(p != NULL);
+
+	LogMessage("Schedule information received: %s", p);
 
 	delete[] m_schedule;
 	m_schedule = new bool[16U];
@@ -208,37 +211,37 @@ bool CDAPNETNetwork::parseSchedule(unsigned char* data)
 	for (unsigned int i = 0U; i < 16U; i++)
 		m_schedule[i] = false;
 
-	if (::strchr((char*)data + 2U, '0') != NULL)
+	if (::strchr(p, '0') != NULL)
 		m_schedule[0U] = true;
-	if (::strchr((char*)data + 2U, '1') != NULL)
+	if (::strchr(p, '1') != NULL)
 		m_schedule[1U] = true;
-	if (::strchr((char*)data + 2U, '2') != NULL)
+	if (::strchr(p, '2') != NULL)
 		m_schedule[2U] = true;
-	if (::strchr((char*)data + 2U, '3') != NULL)
+	if (::strchr(p, '3') != NULL)
 		m_schedule[3U] = true;
-	if (::strchr((char*)data + 2U, '4') != NULL)
+	if (::strchr(p, '4') != NULL)
 		m_schedule[4U] = true;
-	if (::strchr((char*)data + 2U, '5') != NULL)
+	if (::strchr(p, '5') != NULL)
 		m_schedule[5U] = true;
-	if (::strchr((char*)data + 2U, '6') != NULL)
+	if (::strchr(p, '6') != NULL)
 		m_schedule[6U] = true;
-	if (::strchr((char*)data + 2U, '7') != NULL)
+	if (::strchr(p, '7') != NULL)
 		m_schedule[7U] = true;
-	if (::strchr((char*)data + 2U, '8') != NULL)
+	if (::strchr(p, '8') != NULL)
 		m_schedule[8U] = true;
-	if (::strchr((char*)data + 2U, '9') != NULL)
+	if (::strchr(p, '9') != NULL)
 		m_schedule[9U] = true;
-	if (::strchr((char*)data + 2U, 'A') != NULL)
+	if (::strchr(p, 'A') != NULL)
 		m_schedule[10U] = true;
-	if (::strchr((char*)data + 2U, 'B') != NULL)
+	if (::strchr(p, 'B') != NULL)
 		m_schedule[11U] = true;
-	if (::strchr((char*)data + 2U, 'C') != NULL)
+	if (::strchr(p, 'C') != NULL)
 		m_schedule[12U] = true;
-	if (::strchr((char*)data + 2U, 'D') != NULL)
+	if (::strchr(p, 'D') != NULL)
 		m_schedule[13U] = true;
-	if (::strchr((char*)data + 2U, 'E') != NULL)
+	if (::strchr(p, 'E') != NULL)
 		m_schedule[14U] = true;
-	if (::strchr((char*)data + 2U, 'F') != NULL)
+	if (::strchr(p, 'F') != NULL)
 		m_schedule[15U] = true;
 
 	return write((unsigned char*)"+\r\n");
