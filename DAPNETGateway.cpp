@@ -39,12 +39,26 @@ const char* DEFAULT_INI_FILE = "DAPNETGateway.ini";
 const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 #endif
 
+#include <utility>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <clocale>
 #include <cassert>
 #include <cmath>
+
+const unsigned int POCSAG_BATCH_LENGTH_WORDS = 17U;
+const unsigned int POCSAG_FRAME_LENGTH_WORDS = 2U;
+
+const unsigned int CODEWORD_TIME_US = 26667U;										// 26.667ms
+const unsigned int FRAME_TIME_US = CODEWORD_TIME_US * POCSAG_FRAME_LENGTH_WORDS;	// 53.333ms
+const unsigned int BATCH_TIME_US = CODEWORD_TIME_US * POCSAG_BATCH_LENGTH_WORDS;	// 453.333ms
+
+const unsigned int SLOT_TIME_US       = 6400000U;									// 6.4s
+const unsigned int SLOT_TIME_MS       = SLOT_TIME_US / 1000U;						// 6.4s
+const unsigned int CODEWORDS_PER_SLOT = SLOT_TIME_US / CODEWORD_TIME_US;			// 240
+const unsigned int BATCHES_PER_SLOT   = SLOT_TIME_US / BATCH_TIME_US;				// 14
 
 const unsigned char FUNCTIONAL_NUMERIC      = 0U;
 const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
@@ -80,7 +94,11 @@ CDAPNETGateway::CDAPNETGateway(const std::string& configFile) :
 m_conf(configFile),
 m_dapnetNetwork(NULL),
 m_pocsagNetwork(NULL),
-m_queue()
+m_queue(),
+m_schedule(NULL),
+m_currentSlot(0U),
+m_sentCodewords(0U),
+m_mmdvmFree(false)
 {
 }
 
@@ -216,10 +234,7 @@ int CDAPNETGateway::run()
 
 	::LogMessage("Logged into the DAPNET network");
 
-	CTimer messageTimer(1000U, 0U, 200U);
-
-	CStopWatch stopWatch;
-	stopWatch.start();
+	CStopWatch slotTimer;
 
 	LogMessage("Starting DAPNETGateway-%s", VERSION);
 
@@ -230,11 +245,14 @@ int CDAPNETGateway::run()
 			switch (buffer[0U]) {
 			case 0x00U:
 				// The MMDVM is idle
-				messageTimer.start();
+				if (!m_mmdvmFree) {
+					m_mmdvmFree = true;
+					m_sentCodewords = (slotTimer.elapsed() * 1000U) / CODEWORD_TIME_US;
+				}
 				break;
 			case 0xFFU:
 				// The MMDVM is busy
-				messageTimer.stop();
+				m_mmdvmFree = false;
 				break;
 			default:
 				// The MMDVM is sending crap
@@ -249,7 +267,7 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			if (!messageTimer.isRunning() || !m_queue.empty()) {
+			if (!m_mmdvmFree) {
 				if (!isTimeMessage(message)) {
 					LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
 					m_queue.push_front(message);
@@ -258,25 +276,25 @@ int CDAPNETGateway::run()
 					delete message;
 				}
 			} else {
-				LogMessage("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-				m_pocsagNetwork->write(message);
-				delete message;
+				LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+				m_queue.push_front(message);
 			}
 		}
 
-		unsigned int ms = stopWatch.elapsed();
-		stopWatch.start();
-
-		messageTimer.clock(ms);
-		if (messageTimer.isRunning() && messageTimer.hasExpired()) {
-			if (!m_queue.empty())
-				sendData();
-
-			messageTimer.start();
+		unsigned int t = (slotTimer.time() / 100ULL) % 1024ULL;
+		unsigned int slot = t / 64U;
+		if (slot != m_currentSlot) {
+			m_currentSlot = slot;
+			LogDebug("Start of slot %u", m_currentSlot);
+			if (m_schedule == NULL || m_currentSlot == 0U)
+				loadSchedule();
+			m_sentCodewords = 0U;
+			slotTimer.start();
 		}
 
-		if (ms < 5U)
-			CThread::sleep(5U);
+		sendMessages();
+
+		CThread::sleep(5U);
 	}
 
 	m_pocsagNetwork->close();
@@ -290,20 +308,37 @@ int CDAPNETGateway::run()
 	return 0;
 }
 
-bool CDAPNETGateway::sendData()
+void CDAPNETGateway::sendMessages()
 {
-	assert(m_pocsagNetwork != NULL);
+	// If the MMDVM is busy, we can't send anything.
+	if (!m_mmdvmFree)
+		return;
 
-	if (!m_queue.empty()) {
-		CPOCSAGMessage* message = m_queue.back();
-		m_queue.pop_back();
-		LogMessage("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-		m_pocsagNetwork->write(message);
-		delete message;
-		return true;
-	}
+	// Do we have a schedule?
+	if (m_schedule == NULL)
+		return;
 
-	return false;
+	// Check to see if we're allowed to send within a slot.
+	if (!m_schedule[m_currentSlot])
+		return;
+
+	// If we have data to send, see if we have time to do so in the current schedule.
+	if (m_queue.empty())
+		return;
+
+	CPOCSAGMessage* message = m_queue.back();
+	assert(message != NULL);
+
+	unsigned int totalCodewords = m_sentCodewords + calculateCodewords(message);
+	if (totalCodewords >= CODEWORDS_PER_SLOT)
+		return;
+
+	m_sentCodewords = totalCodewords;
+	LogMessage("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+
+	m_queue.pop_back();
+	m_pocsagNetwork->write(message);
+	delete message;
 }
 
 bool CDAPNETGateway::recover()
@@ -332,3 +367,43 @@ bool CDAPNETGateway::isTimeMessage(const CPOCSAGMessage* message) const
 	return false;
 }
 
+unsigned int CDAPNETGateway::calculateCodewords(const CPOCSAGMessage* message) const
+{
+	assert(message != NULL);
+
+	unsigned int len = 0U;
+	if (message->m_functional == FUNCTIONAL_NUMERIC)
+		len = message->m_length / 5U;			// For the number packing, five to a word
+	else
+		len = (message->m_length * 20U) / 7U;	// For the ASCII packing, 20/7 to a word
+
+	len++;										// For the address word
+
+	if ((len % 2U) == 1U)						// Always an even number of words
+		len++;
+
+	if (len > 16U)								// A very long message will include a sync word
+		len++;
+
+	return len;
+}
+
+void CDAPNETGateway::loadSchedule()
+{
+	bool* schedule = m_dapnetNetwork->readSchedule();
+	if (schedule == NULL)
+		return;
+
+	delete[] m_schedule;
+	m_schedule = schedule;
+
+	std::string text;
+	for (unsigned int i = 0U; i < 16U; i++) {
+		if (m_schedule[i])
+			text += "*";
+		else
+			text += "-";
+	}
+
+	LogMessage("Loaded new schedule: %s", text.c_str());
+}

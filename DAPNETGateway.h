@@ -26,6 +26,7 @@
 
 #include <string>
 #include <deque>
+#include <vector>
 
 class CDAPNETGateway
 {
@@ -40,10 +41,17 @@ private:
 	CDAPNETNetwork*             m_dapnetNetwork;
 	CPOCSAGNetwork*             m_pocsagNetwork;
 	std::deque<CPOCSAGMessage*> m_queue;
+	bool*                       m_schedule;
+	unsigned int                m_currentSlot;
+	unsigned int                m_sentCodewords;
+	bool                        m_mmdvmFree;
 
-	bool sendData();
+
+	void sendMessages();
 	bool recover();
 	bool isTimeMessage(const CPOCSAGMessage* message) const;
+	unsigned int calculateCodewords(const CPOCSAGMessage* message) const;
+	void loadSchedule();
 };
 
 #endif
