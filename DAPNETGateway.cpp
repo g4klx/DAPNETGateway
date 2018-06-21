@@ -95,6 +95,7 @@ m_conf(configFile),
 m_dapnetNetwork(NULL),
 m_pocsagNetwork(NULL),
 m_queue(),
+m_slotTimer(),
 m_schedule(NULL),
 m_currentSlot(0U),
 m_sentCodewords(0U),
@@ -234,8 +235,6 @@ int CDAPNETGateway::run()
 
 	::LogMessage("Logged into the DAPNET network");
 
-	CStopWatch slotTimer;
-
 	LogMessage("Starting DAPNETGateway-%s", VERSION);
 
 	for (;;) {
@@ -247,7 +246,7 @@ int CDAPNETGateway::run()
 				// The MMDVM is idle
 				if (!m_mmdvmFree) {
 					m_mmdvmFree = true;
-					m_sentCodewords = (slotTimer.elapsed() * 1000U) / CODEWORD_TIME_US;
+					m_sentCodewords = (m_slotTimer.elapsed() * 1000U) / CODEWORD_TIME_US;
 				}
 				break;
 			case 0xFFU:
@@ -281,20 +280,19 @@ int CDAPNETGateway::run()
 			}
 		}
 
-		unsigned int t = (slotTimer.time() / 100ULL) % 1024ULL;
+		unsigned int t = (m_slotTimer.time() / 100ULL) % 1024ULL;
 		unsigned int slot = t / 64U;
 		if (slot != m_currentSlot) {
 			m_currentSlot = slot;
-			LogDebug("Start of slot %u", m_currentSlot);
 			if (m_schedule == NULL || m_currentSlot == 0U)
 				loadSchedule();
 			m_sentCodewords = 0U;
-			slotTimer.start();
+			m_slotTimer.start();
 		}
 
 		sendMessages();
 
-		CThread::sleep(5U);
+		CThread::sleep(10U);
 	}
 
 	m_pocsagNetwork->close();
@@ -329,12 +327,25 @@ void CDAPNETGateway::sendMessages()
 	CPOCSAGMessage* message = m_queue.back();
 	assert(message != NULL);
 
-	unsigned int totalCodewords = m_sentCodewords + calculateCodewords(message);
-	if (totalCodewords >= CODEWORDS_PER_SLOT)
+	unsigned int codewords = calculateCodewords(message);
+
+	// Do we have too much data already sent in this slot?
+	unsigned int totalCodewords = m_sentCodewords + codewords;
+	if (totalCodewords >= CODEWORDS_PER_SLOT) {
+		LogDebug("Message would exceed the amount of data left in slot %u", m_currentSlot);
 		return;
+	}
+
+	// Is there enough time to send it in this slot before it ends?
+	unsigned int sendTime = (codewords * CODEWORD_TIME_US) / 1000U;
+	unsigned int timeLeft = SLOT_TIME_MS - m_slotTimer.elapsed();
+	if (sendTime >= timeLeft) {
+		LogDebug("Message would exceed the amount of time left in slot %u", m_currentSlot);
+		return;
+	}
 
 	m_sentCodewords = totalCodewords;
-	LogMessage("Sending message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+	LogMessage("Sending message in slot %u to %07u, type %u, func %s: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
 
 	m_queue.pop_back();
 	m_pocsagNetwork->write(message);

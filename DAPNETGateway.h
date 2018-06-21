@@ -22,6 +22,7 @@
 #include "DAPNETNetwork.h"
 #include "POCSAGNetwork.h"
 #include "POCSAGMessage.h"
+#include "StopWatch.h"
 #include "Conf.h"
 
 #include <string>
@@ -41,6 +42,7 @@ private:
 	CDAPNETNetwork*             m_dapnetNetwork;
 	CPOCSAGNetwork*             m_pocsagNetwork;
 	std::deque<CPOCSAGMessage*> m_queue;
+	CStopWatch                  m_slotTimer;
 	bool*                       m_schedule;
 	unsigned int                m_currentSlot;
 	unsigned int                m_sentCodewords;
