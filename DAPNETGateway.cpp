@@ -48,12 +48,15 @@ const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 #include <cassert>
 #include <cmath>
 
-const unsigned int POCSAG_BATCH_LENGTH_WORDS = 17U;
-const unsigned int POCSAG_FRAME_LENGTH_WORDS = 2U;
+const unsigned int FRAME_LENGTH_CODEWORDS    = 2U;
+const unsigned int BATCH_LENGTH_CODEWORDS    = 17U;
+const unsigned int PREAMBLE_LENGTH_CODEWORDS = BATCH_LENGTH_CODEWORDS + 1U;
 
 const unsigned int CODEWORD_TIME_US = 26667U;										// 26.667ms
-const unsigned int FRAME_TIME_US = CODEWORD_TIME_US * POCSAG_FRAME_LENGTH_WORDS;	// 53.333ms
-const unsigned int BATCH_TIME_US = CODEWORD_TIME_US * POCSAG_BATCH_LENGTH_WORDS;	// 453.333ms
+const unsigned int FRAME_TIME_US = CODEWORD_TIME_US * FRAME_LENGTH_CODEWORDS;		// 53.333ms
+const unsigned int BATCH_TIME_US = CODEWORD_TIME_US * BATCH_LENGTH_CODEWORDS;		// 453.333ms
+
+const unsigned int PREAMBLE_TIME_US = CODEWORD_TIME_US * PREAMBLE_LENGTH_CODEWORDS;	// 480.006ms
 
 const unsigned int SLOT_TIME_US       = 6400000U;									// 6.4s
 const unsigned int SLOT_TIME_MS       = SLOT_TIME_US / 1000U;						// 6.4s
@@ -266,18 +269,8 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			if (!m_mmdvmFree) {
-				if (!isTimeMessage(message)) {
-					LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-					m_queue.push_front(message);
-				} else {
-					LogDebug("Rejecting message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-					delete message;
-				}
-			} else {
-				LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-				m_queue.push_front(message);
-			}
+			LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+			m_queue.push_front(message);
 		}
 
 		unsigned int t = (m_slotTimer.time() / 100ULL) % 1024ULL;
@@ -309,16 +302,22 @@ int CDAPNETGateway::run()
 void CDAPNETGateway::sendMessages()
 {
 	// If the MMDVM is busy, we can't send anything.
-	if (!m_mmdvmFree)
+	if (!m_mmdvmFree) {
+		removeTimeMessages();
 		return;
+	}
 
 	// Do we have a schedule?
-	if (m_schedule == NULL)
+	if (m_schedule == NULL) {
+		removeTimeMessages();
 		return;
+	}
 
 	// Check to see if we're allowed to send within a slot.
-	if (!m_schedule[m_currentSlot])
+	if (!m_schedule[m_currentSlot]) {
+		removeTimeMessages();
 		return;
+	}
 
 	// If we have data to send, see if we have time to do so in the current schedule.
 	if (m_queue.empty())
@@ -330,19 +329,15 @@ void CDAPNETGateway::sendMessages()
 	unsigned int codewords = calculateCodewords(message);
 
 	// Do we have too much data already sent in this slot?
-	unsigned int totalCodewords = m_sentCodewords + codewords;
-	if (totalCodewords >= CODEWORDS_PER_SLOT) {
-		LogDebug("Message would exceed the amount of data left in slot %u", m_currentSlot);
+	unsigned int totalCodewords = m_sentCodewords + PREAMBLE_LENGTH_CODEWORDS + codewords;
+	if (totalCodewords >= CODEWORDS_PER_SLOT)
 		return;
-	}
 
 	// Is there enough time to send it in this slot before it ends?
-	unsigned int sendTime = (codewords * CODEWORD_TIME_US) / 1000U;
+	unsigned int sendTime = (PREAMBLE_TIME_US + codewords * CODEWORD_TIME_US) / 1000U;
 	unsigned int timeLeft = SLOT_TIME_MS - m_slotTimer.elapsed();
-	if (sendTime >= timeLeft) {
-		LogDebug("Message would exceed the amount of time left in slot %u", m_currentSlot);
+	if (sendTime >= timeLeft)
 		return;
-	}
 
 	m_sentCodewords = totalCodewords;
 	LogMessage("Sending message in slot %u to %07u, type %u, func %s: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
@@ -417,4 +412,19 @@ void CDAPNETGateway::loadSchedule()
 	}
 
 	LogMessage("Loaded new schedule: %s", text.c_str());
+}
+
+void CDAPNETGateway::removeTimeMessages()
+{
+	if (m_queue.empty())
+		return;
+
+	CPOCSAGMessage* message = m_queue.back();
+	assert(message != NULL);
+
+	if (isTimeMessage(message)) {
+		LogDebug("Rejecting message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+		m_queue.pop_back();
+		delete message;
+	}
 }

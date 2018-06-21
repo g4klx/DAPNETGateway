@@ -54,6 +54,7 @@ private:
 	bool isTimeMessage(const CPOCSAGMessage* message) const;
 	unsigned int calculateCodewords(const CPOCSAGMessage* message) const;
 	void loadSchedule();
+	void removeTimeMessages();
 };
 
 #endif
