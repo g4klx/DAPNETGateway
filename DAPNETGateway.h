@@ -44,6 +44,7 @@ private:
 	std::deque<CPOCSAGMessage*> m_queue;
 	CStopWatch                  m_slotTimer;
 	bool*                       m_schedule;
+	bool                        m_allSlots;
 	unsigned int                m_currentSlot;
 	unsigned int                m_sentCodewords;
 	bool                        m_mmdvmFree;
@@ -54,7 +55,7 @@ private:
 	bool isTimeMessage(const CPOCSAGMessage* message) const;
 	unsigned int calculateCodewords(const CPOCSAGMessage* message) const;
 	void loadSchedule();
-	void removeTimeMessages();
+	bool sendMessage(CPOCSAGMessage* message) const;
 };
 
 #endif

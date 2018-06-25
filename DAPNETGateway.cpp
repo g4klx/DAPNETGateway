@@ -66,6 +66,8 @@ const unsigned int BATCHES_PER_SLOT   = SLOT_TIME_US / BATCH_TIME_US;				// 14
 const unsigned char FUNCTIONAL_NUMERIC      = 0U;
 const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
 
+const unsigned int MAX_TIME_TO_HOLD_TIME_MESSAGES = 2000U;		// 2s
+
 int main(int argc, char** argv)
 {
 	const char* iniFile = DEFAULT_INI_FILE;
@@ -100,6 +102,7 @@ m_pocsagNetwork(NULL),
 m_queue(),
 m_slotTimer(),
 m_schedule(NULL),
+m_allSlots(false),
 m_currentSlot(0U),
 m_sentCodewords(0U),
 m_mmdvmFree(false)
@@ -248,12 +251,14 @@ int CDAPNETGateway::run()
 			case 0x00U:
 				// The MMDVM is idle
 				if (!m_mmdvmFree) {
+					// LogDebug("*** MMDVM is free");
 					m_mmdvmFree = true;
 					m_sentCodewords = (m_slotTimer.elapsed() * 1000U) / CODEWORD_TIME_US;
 				}
 				break;
 			case 0xFFU:
 				// The MMDVM is busy
+				// LogDebug("*** MMDVM is busy");
 				m_mmdvmFree = false;
 				break;
 			default:
@@ -276,6 +281,7 @@ int CDAPNETGateway::run()
 		unsigned int t = (m_slotTimer.time() / 100ULL) % 1024ULL;
 		unsigned int slot = t / 64U;
 		if (slot != m_currentSlot) {
+			// LogDebug("Start of slot %u", slot);
 			m_currentSlot = slot;
 			if (m_schedule == NULL || m_currentSlot == 0U)
 				loadSchedule();
@@ -302,22 +308,16 @@ int CDAPNETGateway::run()
 void CDAPNETGateway::sendMessages()
 {
 	// If the MMDVM is busy, we can't send anything.
-	if (!m_mmdvmFree) {
-		removeTimeMessages();
+	if (!m_mmdvmFree)
 		return;
-	}
 
 	// Do we have a schedule?
-	if (m_schedule == NULL) {
-		removeTimeMessages();
+	if (m_schedule == NULL)
 		return;
-	}
 
 	// Check to see if we're allowed to send within a slot.
-	if (!m_schedule[m_currentSlot]) {
-		removeTimeMessages();
+	if (!m_schedule[m_currentSlot])
 		return;
-	}
 
 	// If we have data to send, see if we have time to do so in the current schedule.
 	if (m_queue.empty())
@@ -326,24 +326,36 @@ void CDAPNETGateway::sendMessages()
 	CPOCSAGMessage* message = m_queue.back();
 	assert(message != NULL);
 
+	// Special case, only test if slots are being used.
+	if (m_allSlots) {
+		sendMessage(message);
+		m_queue.pop_back();
+		delete message;
+		return;
+	}
+
 	unsigned int codewords = calculateCodewords(message);
 
 	// Do we have too much data already sent in this slot?
 	unsigned int totalCodewords = m_sentCodewords + PREAMBLE_LENGTH_CODEWORDS + codewords;
-	if (totalCodewords >= CODEWORDS_PER_SLOT)
+	if (totalCodewords >= CODEWORDS_PER_SLOT) {
+		// LogDebug("Too many codewords sent in slot %u already %u + %u + %u = %u >= %u", m_currentSlot, m_sentCodewords, PREAMBLE_LENGTH_CODEWORDS, codewords, totalCodewords, CODEWORDS_PER_SLOT);
 		return;
+	}
 
 	// Is there enough time to send it in this slot before it ends?
 	unsigned int sendTime = (PREAMBLE_TIME_US + codewords * CODEWORD_TIME_US) / 1000U;
 	unsigned int timeLeft = SLOT_TIME_MS - m_slotTimer.elapsed();
-	if (sendTime >= timeLeft)
+	if (sendTime >= timeLeft) {
+		// LogDebug("Too little time to send the message in slot %u, %u + %u + %u = %u >= %u = %u - %u", m_currentSlot, PREAMBLE_TIME_US, codewords, CODEWORD_TIME_US, sendTime, timeLeft, SLOT_TIME_MS, m_slotTimer.elapsed());
 		return;
+	}
 
-	m_sentCodewords = totalCodewords;
-	LogMessage("Sending message in slot %u to %07u, type %u, func %s: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+	bool ret = sendMessage(message);
+	if (ret)
+		m_sentCodewords = totalCodewords;
 
 	m_queue.pop_back();
-	m_pocsagNetwork->write(message);
 	delete message;
 }
 
@@ -381,15 +393,14 @@ unsigned int CDAPNETGateway::calculateCodewords(const CPOCSAGMessage* message) c
 	if (message->m_functional == FUNCTIONAL_NUMERIC)
 		len = message->m_length / 5U;			// For the number packing, five to a word
 	else
-		len = (message->m_length * 20U) / 7U;	// For the ASCII packing, 20/7 to a word
+		len = (message->m_length * 7U) / 20U;	// For the ASCII packing, 7/20 to a word
 
 	len++;										// For the address word
 
 	if ((len % 2U) == 1U)						// Always an even number of words
 		len++;
 
-	if (len > 16U)								// A very long message will include a sync word
-		len++;
+	len += len % 16U;							// A very long message will include sync words
 
 	return len;
 }
@@ -403,28 +414,35 @@ void CDAPNETGateway::loadSchedule()
 	delete[] m_schedule;
 	m_schedule = schedule;
 
+	m_allSlots = true;
+
 	std::string text;
 	for (unsigned int i = 0U; i < 16U; i++) {
-		if (m_schedule[i])
+		if (m_schedule[i]) {
 			text += "*";
-		else
+		} else {
 			text += "-";
+			m_allSlots = false;
+		}
 	}
 
-	LogMessage("Loaded new schedule: %s", text.c_str());
+	if (m_allSlots)
+		LogMessage("All slots are available for transmission");
+	else
+		LogMessage("Loaded new schedule: %s", text.c_str());
 }
 
-void CDAPNETGateway::removeTimeMessages()
+bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 {
-	if (m_queue.empty())
-		return;
-
-	CPOCSAGMessage* message = m_queue.back();
 	assert(message != NULL);
 
-	if (isTimeMessage(message)) {
+	bool ret = isTimeMessage(message);
+	if (ret && message->m_timeQueued.elapsed() >=  MAX_TIME_TO_HOLD_TIME_MESSAGES) {
 		LogDebug("Rejecting message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-		m_queue.pop_back();
-		delete message;
+		return false;
+	} else {
+		LogMessage("Sending message in slot %u to %07u, type %u, func %s: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+		m_pocsagNetwork->write(message);
+		return true;
 	}
 }

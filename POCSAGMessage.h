@@ -19,6 +19,8 @@
 #ifndef	POCSAGMessage_H
 #define	POCSAGMessage_H
 
+#include "StopWatch.h"
+
 #include <cstdint>
 #include <string>
 
@@ -32,6 +34,7 @@ public:
 	unsigned char  m_functional;
 	unsigned char* m_message;
 	unsigned int   m_length;
+	CStopWatch     m_timeQueued;
 };
 
 #endif

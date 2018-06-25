@@ -27,7 +27,8 @@ m_type(type),
 m_ric(ric),
 m_functional(functional),
 m_message(NULL),
-m_length(length)
+m_length(length),
+m_timeQueued()
 {
 	assert(ric > 0U);
 	assert(functional < 4U);
@@ -36,6 +37,8 @@ m_length(length)
 
 	m_message = new unsigned char[length];
 	::memcpy(m_message, message, length);
+
+	m_timeQueued.start();
 }
 
 CPOCSAGMessage::~CPOCSAGMessage()
