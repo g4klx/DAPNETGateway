@@ -42,7 +42,7 @@ private:
 	LARGE_INTEGER  m_frequencyMS;
 	LARGE_INTEGER  m_start;
 #else
-	struct timeval m_start;
+	struct timespec m_start;
 #endif
 };
 
