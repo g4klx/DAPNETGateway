@@ -241,6 +241,8 @@ int CDAPNETGateway::run()
 
 	::LogMessage("Logged into the DAPNET network");
 
+	std::vector<unsigned int> whiteList = m_conf.getWhiteList();
+
 	LogMessage("Starting DAPNETGateway-%s", VERSION);
 
 	for (;;) {
@@ -274,8 +276,16 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
-			m_queue.push_front(message);
+			bool found = false;
+
+			// If we have a white list of RICs, use it.
+			if (!whiteList.empty())
+				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
+
+			if (!found) {
+				LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+				m_queue.push_front(message);
+			}
 		}
 
 		unsigned int t = (m_slotTimer.time() / 100ULL) % 1024ULL;

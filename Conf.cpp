@@ -36,6 +36,7 @@ enum SECTION {
 CConf::CConf(const std::string& file) :
 m_file(file),
 m_callsign(),
+m_whiteList(),
 m_rptAddress(),
 m_rptPort(0U),
 m_myAddress(),
@@ -92,7 +93,15 @@ bool CConf::read()
 	if (section == SECTION_GENERAL) {
 		if (::strcmp(key, "Callsign") == 0)
 			m_callsign = value;
-		else if (::strcmp(key, "RptAddress") == 0)
+		else if (::strcmp(key, "WhiteList") == 0) {
+			char* p = ::strtok(value, ",\r\n");
+			while (p != NULL) {
+				unsigned int ric = (unsigned int)::atoi(p);
+				if (ric > 0U)
+					m_whiteList.push_back(ric);
+				p = ::strtok(NULL, ",\r\n");
+			}
+		} else if (::strcmp(key, "RptAddress") == 0)
 			m_rptAddress = value;
 		else if (::strcmp(key, "RptPort") == 0)
 			m_rptPort = (unsigned int)::atoi(value);
@@ -131,6 +140,11 @@ bool CConf::read()
 std::string CConf::getCallsign() const
 {
   return m_callsign;
+}
+
+std::vector<uint32_t> CConf::getWhiteList() const
+{
+	return m_whiteList;
 }
 
 std::string CConf::getRptAddress() const

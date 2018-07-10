@@ -20,6 +20,7 @@
 #define	CONF_H
 
 #include <string>
+#include <vector>
 
 class CConf
 {
@@ -31,6 +32,7 @@ public:
 
   // The General section
   std::string  getCallsign() const;
+  std::vector<unsigned int> getWhiteList() const;
   std::string  getRptAddress() const;
   unsigned int getRptPort() const;
   std::string  getMyAddress() const;
@@ -51,7 +53,9 @@ public:
 
 private:
   std::string  m_file;
+
   std::string  m_callsign;
+  std::vector<unsigned int> m_whiteList;
   std::string  m_rptAddress;
   unsigned int m_rptPort;
   std::string  m_myAddress;
