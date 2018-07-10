@@ -47,7 +47,6 @@ public:
   std::string  getDAPNETAddress() const;
   unsigned int getDAPNETPort() const;
   std::string  getDAPNETAuthKey() const;
-  bool         getDAPNETSuppressTime() const;
   bool         getDAPNETDebug() const;
 
 private:
@@ -67,7 +66,6 @@ private:
   std::string  m_dapnetAddress;
   unsigned int m_dapnetPort;
   std::string  m_dapnetAuthKey;
-  bool         m_dapnetSuppressTime;
   bool         m_dapnetDebug;
 };
 
