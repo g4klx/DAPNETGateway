@@ -30,7 +30,6 @@ m_message(NULL),
 m_length(length),
 m_timeQueued()
 {
-	assert(ric > 0U);
 	assert(functional < 4U);
 	assert(message != NULL);
 	assert(length > 0U);
