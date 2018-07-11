@@ -48,6 +48,7 @@ const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 #include <clocale>
 #include <cassert>
 #include <cmath>
+#include <algorithm>
 
 const unsigned int FRAME_LENGTH_CODEWORDS    = 2U;
 const unsigned int BATCH_LENGTH_CODEWORDS    = 17U;
