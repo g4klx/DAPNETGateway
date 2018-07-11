@@ -39,6 +39,7 @@ const char* DEFAULT_INI_FILE = "DAPNETGateway.ini";
 const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 #endif
 
+#include <algorithm>
 #include <utility>
 
 #include <cstdio>
