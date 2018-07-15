@@ -33,8 +33,8 @@ public:
 
 	unsigned long long time() const;
 
-	unsigned long start();
-	unsigned int  elapsed();
+	unsigned long long start();
+	unsigned int       elapsed();
 
 private:
 #if defined(_WIN32) || defined(_WIN64)
@@ -42,7 +42,7 @@ private:
 	LARGE_INTEGER  m_frequencyMS;
 	LARGE_INTEGER  m_start;
 #else
-	struct timespec m_start;
+	unsigned long long m_startMS;
 #endif
 };
 
