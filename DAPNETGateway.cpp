@@ -285,7 +285,7 @@ int CDAPNETGateway::run()
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
 
-			if (!found) {
+			if (found) {
 				switch (message->m_functional) {
 					case FUNCTIONAL_ALPHANUMERIC:
 						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
@@ -301,7 +301,7 @@ int CDAPNETGateway::run()
 						break;
 					default:
 						break;
-				}
+        }
 
 				m_queue.push_front(message);
 			}
