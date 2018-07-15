@@ -279,7 +279,7 @@ int CDAPNETGateway::run()
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
-			bool found = false;
+			bool found = true;
 
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
