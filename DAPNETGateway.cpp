@@ -65,6 +65,8 @@ const unsigned int CODEWORDS_PER_SLOT = SLOT_TIME_US / CODEWORD_TIME_US;			// 24
 const unsigned int BATCHES_PER_SLOT   = SLOT_TIME_US / BATCH_TIME_US;				// 14
 
 const unsigned char FUNCTIONAL_NUMERIC      = 0U;
+const unsigned char FUNCTIONAL_ALERT1       = 1U;
+const unsigned char FUNCTIONAL_ALERT2       = 2U;
 const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
 
 const unsigned int MAX_TIME_TO_HOLD_TIME_MESSAGES = 2000U;		// 2s
@@ -284,7 +286,23 @@ int CDAPNETGateway::run()
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
 
 			if (found) {
-				LogDebug("Queueing message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+				switch (message->m_functional) {
+					case FUNCTIONAL_ALPHANUMERIC:
+						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
+						break;
+					case FUNCTIONAL_NUMERIC:
+						LogDebug("Queueing message to %07u, type %u, func Numeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
+						break;
+					case FUNCTIONAL_ALERT1:
+						LogDebug("Queueing message to %07u, type %u, func Alert 1", message->m_ric, message->m_type);
+						break;
+					case FUNCTIONAL_ALERT2:
+						LogDebug("Queueing message to %07u, type %u, func Alert 2", message->m_ric, message->m_type);
+						break;
+					default:
+						break;
+        }
+
 				m_queue.push_front(message);
 			}
 		}
@@ -401,10 +419,18 @@ unsigned int CDAPNETGateway::calculateCodewords(const CPOCSAGMessage* message) c
 	assert(message != NULL);
 
 	unsigned int len = 0U;
-	if (message->m_functional == FUNCTIONAL_NUMERIC)
-		len = message->m_length / 5U;			// For the number packing, five to a word
-	else
-		len = (message->m_length * 7U) / 20U;	// For the ASCII packing, 7/20 to a word
+	switch (message->m_functional) {
+		case FUNCTIONAL_NUMERIC:
+			len = message->m_length / 5U;			// For the number packing, five to a word
+			break;
+		case FUNCTIONAL_ALPHANUMERIC:
+			len = (message->m_length * 7U) / 20U;	// For the ASCII packing, 7/20 to a word
+			break;
+		case FUNCTIONAL_ALERT1:
+		case FUNCTIONAL_ALERT2:
+		default:
+			break;
+	}
 
 	len++;										// For the address word
 
@@ -448,11 +474,43 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 	assert(message != NULL);
 
 	bool ret = isTimeMessage(message);
-	if (ret && message->m_timeQueued.elapsed() >=  MAX_TIME_TO_HOLD_TIME_MESSAGES) {
-		LogDebug("Rejecting message to %07u, type %u, func %s: \"%.*s\"", message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+	if (ret && message->m_timeQueued.elapsed() >= MAX_TIME_TO_HOLD_TIME_MESSAGES) {
+		switch (message->m_functional) {
+			case FUNCTIONAL_ALPHANUMERIC:
+				LogDebug("Rejecting message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
+				break;
+			case FUNCTIONAL_NUMERIC:
+				LogDebug("Rejecting message to %07u, type %u, func Numeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
+				break;
+			case FUNCTIONAL_ALERT1:
+				LogDebug("Rejecting message to %07u, type %u, func Alert 1", message->m_ric, message->m_type);
+				break;
+			case FUNCTIONAL_ALERT2:
+				LogDebug("Rejecting message to %07u, type %u, func Alert 2", message->m_ric, message->m_type);
+				break;
+			default:
+				break;
+		}
+
 		return false;
 	} else {
-		LogMessage("Sending message in slot %u to %07u, type %u, func %s: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_functional == FUNCTIONAL_NUMERIC ? "Numeric" : "Alphanumeric", message->m_length, message->m_message);
+		switch (message->m_functional) {
+			case FUNCTIONAL_ALPHANUMERIC:
+				LogMessage("Sending message in slot %u to %07u, type %u, func Alphanumeric: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_length, message->m_message);
+				break;
+			case FUNCTIONAL_NUMERIC:
+				LogMessage("Sending message in slot %u to %07u, type %u, func Numeric: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_length, message->m_message);
+				break;
+			case FUNCTIONAL_ALERT1:
+				LogMessage("Sending message in slot %u to %07u, type %u, func Alert 1", m_currentSlot, message->m_ric, message->m_type);
+				break;
+			case FUNCTIONAL_ALERT2:
+				LogMessage("Sending message in slot %u to %07u, type %u, func Alert 2", m_currentSlot, message->m_ric, message->m_type);
+				break;
+			default:
+				break;
+		}
+
 		m_pocsagNetwork->write(message);
 		return true;
 	}
