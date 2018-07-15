@@ -301,7 +301,7 @@ int CDAPNETGateway::run()
 						break;
 					default:
 						break;
-        }
+				}
 
 				m_queue.push_front(message);
 			}
