@@ -69,7 +69,7 @@ const unsigned char FUNCTIONAL_ALERT1       = 1U;
 const unsigned char FUNCTIONAL_ALERT2       = 2U;
 const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
 
-const unsigned int MAX_TIME_TO_HOLD_TIME_MESSAGES = 2000U;		// 2s
+const unsigned int MAX_TIME_TO_HOLD_TIME_MESSAGES = 30000U;		// 30s
 
 int main(int argc, char** argv)
 {
