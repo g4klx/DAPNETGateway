@@ -288,6 +288,7 @@ int CDAPNETGateway::run()
 			if (found) {
 				switch (message->m_functional) {
 					case FUNCTIONAL_ALPHANUMERIC:
+					case FUNCTIONAL_ALERT2:
 						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
 						break;
 					case FUNCTIONAL_NUMERIC:
@@ -295,9 +296,6 @@ int CDAPNETGateway::run()
 						break;
 					case FUNCTIONAL_ALERT1:
 						LogDebug("Queueing message to %07u, type %u, func Alert 1", message->m_ric, message->m_type);
-						break;
-					case FUNCTIONAL_ALERT2:
-						LogDebug("Queueing message to %07u, type %u, func Alert 2", message->m_ric, message->m_type);
 						break;
 					default:
 						break;
@@ -424,10 +422,10 @@ unsigned int CDAPNETGateway::calculateCodewords(const CPOCSAGMessage* message) c
 			len = message->m_length / 5U;			// For the number packing, five to a word
 			break;
 		case FUNCTIONAL_ALPHANUMERIC:
+		case FUNCTIONAL_ALERT2:
 			len = (message->m_length * 7U) / 20U;	// For the ASCII packing, 7/20 to a word
 			break;
 		case FUNCTIONAL_ALERT1:
-		case FUNCTIONAL_ALERT2:
 		default:
 			break;
 	}
@@ -477,6 +475,7 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 	if (ret && message->m_timeQueued.elapsed() >= MAX_TIME_TO_HOLD_TIME_MESSAGES) {
 		switch (message->m_functional) {
 			case FUNCTIONAL_ALPHANUMERIC:
+			case FUNCTIONAL_ALERT2:
 				LogDebug("Rejecting message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
 				break;
 			case FUNCTIONAL_NUMERIC:
@@ -484,9 +483,6 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 				break;
 			case FUNCTIONAL_ALERT1:
 				LogDebug("Rejecting message to %07u, type %u, func Alert 1", message->m_ric, message->m_type);
-				break;
-			case FUNCTIONAL_ALERT2:
-				LogDebug("Rejecting message to %07u, type %u, func Alert 2", message->m_ric, message->m_type);
 				break;
 			default:
 				break;
@@ -496,6 +492,7 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 	} else {
 		switch (message->m_functional) {
 			case FUNCTIONAL_ALPHANUMERIC:
+			case FUNCTIONAL_ALERT2:
 				LogMessage("Sending message in slot %u to %07u, type %u, func Alphanumeric: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_length, message->m_message);
 				break;
 			case FUNCTIONAL_NUMERIC:
@@ -503,9 +500,6 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 				break;
 			case FUNCTIONAL_ALERT1:
 				LogMessage("Sending message in slot %u to %07u, type %u, func Alert 1", m_currentSlot, message->m_ric, message->m_type);
-				break;
-			case FUNCTIONAL_ALERT2:
-				LogMessage("Sending message in slot %u to %07u, type %u, func Alert 2", m_currentSlot, message->m_ric, message->m_type);
 				break;
 			default:
 				break;
