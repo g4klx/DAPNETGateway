@@ -288,8 +288,10 @@ int CDAPNETGateway::run()
 			if (found) {
 				switch (message->m_functional) {
 					case FUNCTIONAL_ALPHANUMERIC:
-					case FUNCTIONAL_ALERT2:
 						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
+						break;
+					case FUNCTIONAL_ALERT2:
+						LogDebug("Queueing message to %07u, type %u, func Alert 2: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
 						break;
 					case FUNCTIONAL_NUMERIC:
 						LogDebug("Queueing message to %07u, type %u, func Numeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
@@ -475,8 +477,10 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 	if (ret && message->m_timeQueued.elapsed() >= MAX_TIME_TO_HOLD_TIME_MESSAGES) {
 		switch (message->m_functional) {
 			case FUNCTIONAL_ALPHANUMERIC:
-			case FUNCTIONAL_ALERT2:
 				LogDebug("Rejecting message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
+				break;
+			case FUNCTIONAL_ALERT2:
+				LogDebug("Rejecting message to %07u, type %u, func Alert 2: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
 				break;
 			case FUNCTIONAL_NUMERIC:
 				LogDebug("Rejecting message to %07u, type %u, func Numeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
@@ -492,8 +496,10 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 	} else {
 		switch (message->m_functional) {
 			case FUNCTIONAL_ALPHANUMERIC:
-			case FUNCTIONAL_ALERT2:
 				LogMessage("Sending message in slot %u to %07u, type %u, func Alphanumeric: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_length, message->m_message);
+				break;
+			case FUNCTIONAL_ALERT2:
+				LogMessage("Sending message in slot %u to %07u, type %u, func Alert 2: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_length, message->m_message);
 				break;
 			case FUNCTIONAL_NUMERIC:
 				LogMessage("Sending message in slot %u to %07u, type %u, func Numeric: \"%.*s\"", m_currentSlot, message->m_ric, message->m_type, message->m_length, message->m_message);
