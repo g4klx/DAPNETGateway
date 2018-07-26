@@ -154,10 +154,6 @@ int CDAPNETGateway::run()
 			return -1;
 		}
 
-		::close(STDIN_FILENO);
-		::close(STDOUT_FILENO);
-		::close(STDERR_FILENO);
-
 		// If we are currently root...
 		if (getuid() == 0) {
 			struct passwd* user = ::getpwnam("mmdvm");
@@ -194,6 +190,14 @@ int CDAPNETGateway::run()
 		::fprintf(stderr, "DAPNETGateway: unable to open the log file\n");
 		return 1;
 	}
+
+#if !defined(_WIN32) && !defined(_WIN64)
+	if (m_daemon) {
+		::close(STDIN_FILENO);
+		::close(STDOUT_FILENO);
+		::close(STDERR_FILENO);
+	}
+#endif
 
 	bool debug             = m_conf.getDAPNETDebug();
 
