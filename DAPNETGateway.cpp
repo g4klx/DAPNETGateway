@@ -278,8 +278,18 @@ int CDAPNETGateway::run()
 		}
 
 		bool ok = m_dapnetNetwork->read();
-		if (!ok)
-			recover();
+		if (!ok) {
+			int i = 0;
+			const unsigned int backoff[] = {
+											 2000U,   4000U,   8000U,  10000U,  20000U, 
+											60000U, 120000U, 240000U, 480000U, 600000U };
+			while (i<10) {
+				CThread::sleep(backoff[i]);
+				recover();
+				if (i < 9)
+					i++;
+			}
+		}
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
