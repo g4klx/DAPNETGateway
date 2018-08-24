@@ -69,6 +69,8 @@ bool CDAPNETNetwork::read()
 	unsigned char buffer[BUFFER_LENGTH];
 
 	int length = m_socket.read(buffer, BUFFER_LENGTH, 0U);
+	if (length < 0)
+		LogMessage ("socket.read: received error %d", length);
 	if (length == -1)		// Error
 		return false;
 	if (length == -2)		// Connection lost
