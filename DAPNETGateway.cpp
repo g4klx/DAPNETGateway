@@ -407,7 +407,7 @@ void CDAPNETGateway::sendMessages()
 
 bool CDAPNETGateway::recover()
 {
-	const unsigned int backoff[] = {2000u, 4000u, 8000u, 10000, 20000u, 60000u, 120000u, 240000u, 480000u, 600000u};
+	const unsigned int backoff[] = {2000u, 4000u, 8000u, 10000u, 20000u, 60000u, 120000u, 240000u, 480000u, 600000u};
 	int i=0;
 
 	for (;;) {
