@@ -185,7 +185,12 @@ int CDAPNETGateway::run()
 	}
 #endif
 
-	ret = ::LogInitialise(m_conf.getLogFilePath(), m_conf.getLogFileRoot(), m_conf.getLogFileLevel(), m_conf.getLogDisplayLevel());
+	unsigned int DisplayLevel = m_conf.getLogDisplayLevel();
+	// In daemon mode there must be no output as STDOUT will be closed
+	if (m_daemon)
+		DisplayLevel = 0;
+
+	ret = ::LogInitialise(m_conf.getLogFilePath(), m_conf.getLogFileRoot(), m_conf.getLogFileLevel(), DisplayLevel);
 	if (!ret) {
 		::fprintf(stderr, "DAPNETGateway: unable to open the log file\n");
 		return 1;
