@@ -220,6 +220,13 @@ int CDAPNETGateway::run()
 	unsigned int dapnetPort   = m_conf.getDAPNETPort();
 	std::string dapnetAuthKey = m_conf.getDAPNETAuthKey();
 
+	if (dapnetAuthKey.length() == 0 || dapnetAuthKey == "TOPSECRET") {
+		::LogError("AuthKey not set or invalid");
+		::LogFinalise();
+		
+		return 1;
+	}
+		
 	m_dapnetNetwork = new CDAPNETNetwork(dapnetAddress, dapnetPort, callsign, dapnetAuthKey, VERSION, debug);
 	ret = m_dapnetNetwork->open();
 	if (!ret) {
