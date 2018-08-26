@@ -185,7 +185,12 @@ int CDAPNETGateway::run()
 	}
 #endif
 
-	ret = ::LogInitialise(m_conf.getLogFilePath(), m_conf.getLogFileRoot(), m_conf.getLogFileLevel(), m_conf.getLogDisplayLevel());
+	unsigned int DisplayLevel = m_conf.getLogDisplayLevel();
+	// In daemon mode there must be no output as STDOUT will be closed
+	if (m_daemon)
+		DisplayLevel = 0;
+
+	ret = ::LogInitialise(m_conf.getLogFilePath(), m_conf.getLogFileRoot(), m_conf.getLogFileLevel(), DisplayLevel);
 	if (!ret) {
 		::fprintf(stderr, "DAPNETGateway: unable to open the log file\n");
 		return 1;
@@ -220,6 +225,13 @@ int CDAPNETGateway::run()
 	unsigned int dapnetPort   = m_conf.getDAPNETPort();
 	std::string dapnetAuthKey = m_conf.getDAPNETAuthKey();
 
+	if (dapnetAuthKey.length() == 0 || dapnetAuthKey == "TOPSECRET") {
+		::LogError("AuthKey not set or invalid");
+		::LogFinalise();
+		
+		return 1;
+	}
+		
 	m_dapnetNetwork = new CDAPNETNetwork(dapnetAddress, dapnetPort, callsign, dapnetAuthKey, VERSION, debug);
 	ret = m_dapnetNetwork->open();
 	if (!ret) {
@@ -280,20 +292,7 @@ int CDAPNETGateway::run()
 		bool ok = m_dapnetNetwork->read();
 		if (!ok)
 			recover();
-/*
-		if (!ok) {
-			int i = 0;
-			const unsigned int backoff[] = {
-											 2000U,   4000U,   8000U,  10000U,  20000U, 
-											60000U, 120000U, 240000U, 480000U, 600000U };
-			while (i<10) {
-				CThread::sleep(backoff[i]);
-				recover();
-				if (i < 9)
-					i++;
-			}
-		}
-*/
+
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
 			bool found = true;
@@ -406,6 +405,10 @@ void CDAPNETGateway::sendMessages()
 }
 
 bool CDAPNETGateway::recover()
+/*
+	Recovery now uses an increasing reconnect holdoff time to prevent
+	DoS-like reconnect attempts to the core server.
+*/
 {
 	const unsigned int backoff[] = {2000u, 4000u, 8000u, 10000u, 20000u, 60000u, 120000u, 240000u, 480000u, 600000u};
 	int i=0;
