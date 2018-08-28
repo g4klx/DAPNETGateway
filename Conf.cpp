@@ -91,8 +91,12 @@ bool CConf::read()
 
     char* value = ::strtok(NULL, "\r\n");
 	if (section == SECTION_GENERAL) {
-		if (::strcmp(key, "Callsign") == 0)
-			m_callsign = value;
+		if (::strcmp(key, "Callsign") == 0) {
+			for (int i=0; value[i]; i++) {
+				if (!isspace(value[i]))
+					m_callsign.insert(m_callsign.end(),1, value[i]);
+			}
+		}
 		else if (::strcmp(key, "WhiteList") == 0) {
 			char* p = ::strtok(value, ",\r\n");
 			while (p != NULL) {
