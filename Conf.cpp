@@ -129,8 +129,12 @@ bool CConf::read()
 			m_dapnetAddress = value;
 		else if (::strcmp(key, "Port") == 0)
 			m_dapnetPort = (unsigned int)::atoi(value);
-		else if (::strcmp(key, "AuthKey") == 0)
-			m_dapnetAuthKey = value;
+		else if (::strcmp(key, "AuthKey") == 0) {
+			for (int i=0; value[i]; i++) {
+				if (!isspace(value[i]))
+					m_dapnetAuthKey.insert(m_dapnetAuthKey.end(),1, value[i]);
+			}
+		}
 		else if (::strcmp(key, "Debug") == 0)
 			m_dapnetDebug = ::atoi(value) == 1;
 	}
