@@ -59,6 +59,9 @@ bool CDAPNETNetwork::login()
 	LogMessage("Logging into DAPNET");
 
 	char login[200U];
+	for(unsigned int i = 0; i < m_callsign.length(); ++i) {
+		m_callsign[i] = tolower(m_callsign[i]);
+	}
 	::snprintf(login, 200, "[MMDVM v%s %s %s]\r\n", m_version, m_callsign.c_str(), m_authKey.c_str());
 
 	return write((unsigned char*)login);
