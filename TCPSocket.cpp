@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2010-2013,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2010-2013,2016,2018 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -95,9 +95,20 @@ bool CTCPSocket::open()
 	int noDelay = 1;
 	if (::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, (char *)&noDelay, sizeof(noDelay)) == -1) {
 #if defined(_WIN32) || defined(_WIN64)
-		LogError("Cannot set the TCP client socket option, err=%d", ::GetLastError());
+		LogError("Cannot set the TCP client socket option for TCP_NODELAY, err=%d", ::GetLastError());
 #else
-		LogError("Cannot set the TCP client socket option, err=%d", errno);
+		LogError("Cannot set the TCP client socket option for TCP_NODELAY, err=%d", errno);
+#endif
+		close();
+		return false;
+	}
+
+	int keepAlive = 1;
+	if (::setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, (char *)&keepAlive, sizeof(keepAlive)) == -1) {
+#if defined(_WIN32) || defined(_WIN64)
+		LogError("Cannot set the TCP client socket option for SO_KEEPALIVE, err=%d", ::GetLastError());
+#else
+		LogError("Cannot set the TCP client socket option for SO_KEEPALIVE, err=%d", errno);
 #endif
 		close();
 		return false;
