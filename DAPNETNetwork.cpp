@@ -21,6 +21,8 @@
 #include "Utils.h"
 #include "Log.h"
 
+#include <algorithm>
+
 #include <cstdio>
 #include <cassert>
 #include <cstring>
@@ -58,10 +60,9 @@ bool CDAPNETNetwork::login()
 {
 	LogMessage("Logging into DAPNET");
 
+	std::transform(m_callsign.begin(), m_callsign.end(), m_callsign.begin(), ::tolower);
+
 	char login[200U];
-	for(unsigned int i = 0; i < m_callsign.length(); ++i) {
-		m_callsign[i] = tolower(m_callsign[i]);
-	}
 	::snprintf(login, 200, "[MMDVM v%s %s %s]\r\n", m_version, m_callsign.c_str(), m_authKey.c_str());
 
 	return write((unsigned char*)login);

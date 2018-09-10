@@ -189,7 +189,7 @@ int CDAPNETGateway::run()
 #if !defined(_WIN32) && !defined(_WIN64)
 	// In daemon mode there must be no output as STDOUT will be closed
 	if (m_daemon)
-		displayLevel = 0;
+		displayLevel = 0U;
 #endif
 
 	ret = ::LogInitialise(m_conf.getLogFilePath(), m_conf.getLogFileRoot(), m_conf.getLogFileLevel(), displayLevel);
