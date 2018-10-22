@@ -234,7 +234,7 @@ int CDAPNETGateway::run()
 		return 1;
 	}
 		
-	m_dapnetNetwork = new CDAPNETNetwork(dapnetAddress, dapnetPort, callsign, dapnetAuthKey, VERSION, false, debug);
+	m_dapnetNetwork = new CDAPNETNetwork(dapnetAddress, dapnetPort, callsign, dapnetAuthKey, VERSION, false, 1, debug);
 	ret = m_dapnetNetwork->open();
 	if (!ret) {
 		m_pocsagNetwork->close();

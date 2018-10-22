@@ -28,7 +28,7 @@
 
 class CDAPNETNetwork {
 public:
-	CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedin, bool debug);
+	CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedIn, int failCount, bool debug);
 	~CDAPNETNetwork();
 
 	bool open();
@@ -48,7 +48,8 @@ private:
 	std::string     m_callsign;
 	std::string     m_authKey;
 	const char*     m_version;
-	bool            m_loggedin;
+	bool            m_loggedIn;
+	int             m_failCount;
 	bool            m_debug;
 	CPOCSAGMessage* m_message;
 	bool*           m_schedule;

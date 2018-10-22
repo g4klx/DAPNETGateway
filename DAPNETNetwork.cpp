@@ -29,12 +29,13 @@
 
 const unsigned int BUFFER_LENGTH = 200U;
 
-CDAPNETNetwork::CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedin, bool debug) :
+CDAPNETNetwork::CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedIn, int failCount, bool debug) :
 m_socket(address, port),
 m_callsign(callsign),
 m_authKey(authKey),
 m_version(version),
-m_loggedin(false),
+m_loggedIn(false),
+m_failCount(failCount),
 m_debug(debug),
 m_message(NULL),
 m_schedule(NULL)
@@ -94,8 +95,8 @@ bool CDAPNETNetwork::read()
 		LogWarning("An error has been reported by DAPNET");
 	} else if (buffer[0U] == '2') {
 		// First time sync paket indicated successful login
-		if (!m_loggedin) {
-			m_loggedin = true;
+		if (!m_loggedIn) {
+			m_loggedIn = true;
 			LogMessage("Logged into the DAPNET network");
 		}
 		// Time synchronisation
@@ -267,7 +268,13 @@ bool CDAPNETNetwork::parseFailedLogin(unsigned char* data)
 	char* p = ::strtok((char*)data + 2U, "\r\n");
 	assert(p != NULL);
 
+	const unsigned int backoff[] = {2000u, 4000u, 8000u, 10000u, 20000u, 60000u, 120000u, 240000u, 480000u, 600000u};
+
 	LogMessage("Login failed: %s", p);
+
+	CThread::sleep(backoff[m_failCount]);
+	if (m_failCount < 9)
+		m_failCount++;
 
 	return write((unsigned char*)"+\r\n");
 }
