@@ -234,7 +234,7 @@ int CDAPNETGateway::run()
 		return 1;
 	}
 		
-	m_dapnetNetwork = new CDAPNETNetwork(dapnetAddress, dapnetPort, callsign, dapnetAuthKey, VERSION, debug);
+	m_dapnetNetwork = new CDAPNETNetwork(dapnetAddress, dapnetPort, callsign, dapnetAuthKey, VERSION, false, debug);
 	ret = m_dapnetNetwork->open();
 	if (!ret) {
 		m_pocsagNetwork->close();
@@ -246,6 +246,8 @@ int CDAPNETGateway::run()
 
 		return 1;
 	}
+
+	LogMessage("Starting DAPNETGateway-%s", VERSION);
 
 	ret = m_dapnetNetwork->login();
 	if (!ret) {
@@ -260,11 +262,7 @@ int CDAPNETGateway::run()
 		return 1;
 	}
 
-	::LogMessage("Logged into the DAPNET network");
-
 	std::vector<unsigned int> whiteList = m_conf.getWhiteList();
-
-	LogMessage("Starting DAPNETGateway-%s", VERSION);
 
 	for (;;) {
 		unsigned char buffer[200U];

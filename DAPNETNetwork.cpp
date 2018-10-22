@@ -29,11 +29,12 @@
 
 const unsigned int BUFFER_LENGTH = 200U;
 
-CDAPNETNetwork::CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool debug) :
+CDAPNETNetwork::CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedin, bool debug) :
 m_socket(address, port),
 m_callsign(callsign),
 m_authKey(authKey),
 m_version(version),
+m_loggedin(false),
 m_debug(debug),
 m_message(NULL),
 m_schedule(NULL)
@@ -92,6 +93,11 @@ bool CDAPNETNetwork::read()
 		// Error
 		LogWarning("An error has been reported by DAPNET");
 	} else if (buffer[0U] == '2') {
+		// First time sync paket indicated successful login
+		if (!m_loggedin) {
+			m_loggedin = true;
+			LogMessage("Logged into the DAPNET network");
+		}
 		// Time synchronisation
 		char* p = ::strchr((char*)buffer, '\n');
 		if (p != NULL)
@@ -110,6 +116,9 @@ bool CDAPNETNetwork::read()
 	} else if (buffer[0U] == '4') {
 		// Timeslot information
 		return parseSchedule(buffer);
+	} else if (buffer[0U] == '7') {
+		// Login failed
+		return parseFailedLogin(buffer);
 	} else if (buffer[0U] == '#') {
 		// A message
 		return parseMessage(buffer, length);
@@ -247,6 +256,18 @@ bool CDAPNETNetwork::parseSchedule(unsigned char* data)
 		m_schedule[14U] = true;
 	if (::strchr(p, 'F') != NULL)
 		m_schedule[15U] = true;
+
+	return write((unsigned char*)"+\r\n");
+}
+
+bool CDAPNETNetwork::parseFailedLogin(unsigned char* data)
+{
+	assert(data != NULL);
+
+	char* p = ::strtok((char*)data + 2U, "\r\n");
+	assert(p != NULL);
+
+	LogMessage("Login failed: %s", p);
 
 	return write((unsigned char*)"+\r\n");
 }
