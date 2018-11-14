@@ -28,6 +28,7 @@
 #include <string>
 #include <deque>
 #include <vector>
+#include <regex>
 
 class CDAPNETGateway
 {
@@ -56,6 +57,8 @@ private:
 	unsigned int calculateCodewords(const CPOCSAGMessage* message) const;
 	void loadSchedule();
 	bool sendMessage(CPOCSAGMessage* message) const;
+
+	std::vector<std::regex>	    m_regex;
 };
 
 #endif

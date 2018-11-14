@@ -22,6 +22,7 @@
 #include "Thread.h"
 #include "Timer.h"
 #include "Log.h"
+#include <regex>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
@@ -108,7 +109,8 @@ m_schedule(NULL),
 m_allSlots(false),
 m_currentSlot(0U),
 m_sentCodewords(0U),
-m_mmdvmFree(false)
+m_mmdvmFree(false),
+m_regex()
 {
 }
 
@@ -300,6 +302,17 @@ int CDAPNETGateway::run()
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
+			m_regex.push_back(std::regex("^E.*"));
+			//If the regex matches the message body, don't send the message
+			if (!m_regex.empty()) {
+				std::string  messageBody(reinterpret_cast<char*>(message->m_message));
+				for (std::regex regex : m_regex) {
+					bool ret =  std::regex_match(messageBody,regex);
+					if (ret)
+						found = false;
+						LogDebug("blacklist Regex match, not queueing message");
+				}
+			}
 
 			if (found) {
 				switch (message->m_functional) {
