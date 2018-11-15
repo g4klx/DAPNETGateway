@@ -304,7 +304,7 @@ int CDAPNETGateway::run()
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
 			if (m_regex.empty()) 
-				m_regex.push_back(std::regex("^E.*"));
+				m_regex.push_back(std::regex("^E.*$"));
 			//If we have a list of blacklist REGEXes, use them 
 			if (!m_regex.empty()) {
 				std::string  messageBody(reinterpret_cast<char*>(message->m_message));
@@ -312,7 +312,7 @@ int CDAPNETGateway::run()
 					bool ret =  std::regex_match(messageBody,regex);
 					//If the regex matches the message body, don't send the message
 					if (ret)
-						regexmatch = false;
+						regexmatch = true;
 						LogDebug("Blacklist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
 				}
 			}
