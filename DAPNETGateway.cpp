@@ -303,7 +303,7 @@ int CDAPNETGateway::run()
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
-			if (m_regex.empty()); 
+			if (m_regex.empty()) 
 				m_regex.push_back(std::regex("^E.*"));
 			//If we have a list of blacklist REGEXes, use them 
 			if (!m_regex.empty()) {
