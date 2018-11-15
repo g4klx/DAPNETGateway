@@ -311,7 +311,7 @@ int CDAPNETGateway::run()
 					//If the regex matches the message body, don't send the message
 					if (ret)
 						found = false;
-						LogDebug("blacklist Regex match, not queueing message");
+						LogDebug("Blacklist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message););
 				}
 			}
 
