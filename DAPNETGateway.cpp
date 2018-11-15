@@ -298,6 +298,7 @@ int CDAPNETGateway::run()
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
 			bool found = true;
+			bool regexmatch = false;
 
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
@@ -311,12 +312,12 @@ int CDAPNETGateway::run()
 					bool ret =  std::regex_match(messageBody,regex);
 					//If the regex matches the message body, don't send the message
 					if (ret)
-						found = false;
+						regexmatch = false;
 						LogDebug("Blacklist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
 				}
 			}
 
-			if (found) {
+			if (found && !regexmatch) {
 				switch (message->m_functional) {
 					case FUNCTIONAL_ALPHANUMERIC:
 						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
