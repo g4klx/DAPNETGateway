@@ -24,6 +24,7 @@
 #include "POCSAGMessage.h"
 #include "StopWatch.h"
 #include "Conf.h"
+#include "REGEXes.h"
 
 #include <string>
 #include <deque>
@@ -42,6 +43,7 @@ private:
 	CConf                       m_conf;
 	CDAPNETNetwork*             m_dapnetNetwork;
 	CPOCSAGNetwork*             m_pocsagNetwork;
+	CREGEX*			    m_regexBlacklist;
 	std::deque<CPOCSAGMessage*> m_queue;
 	CStopWatch                  m_slotTimer;
 	bool*                       m_schedule;

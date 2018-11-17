@@ -22,6 +22,7 @@
 #include "Thread.h"
 #include "Timer.h"
 #include "Log.h"
+#include "REGEXes.h"
 #include <regex>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -265,6 +266,10 @@ int CDAPNETGateway::run()
 	}
 
 	std::vector<unsigned int> whiteList = m_conf.getWhiteList();
+	m_regexBlacklist = new CREGEX("/tmp/regexes.txt");
+	if (m_regexBlacklist->load()) 
+		m_regex = m_regexBlacklist->get();
+
 
 	for (;;) {
 		unsigned char buffer[200U];
@@ -303,17 +308,20 @@ int CDAPNETGateway::run()
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
-			if (m_regex.empty()) 
+			if (m_regex.empty()) {
 				m_regex.push_back(std::regex("^E.*$"));
+				m_regex.push_back(std::regex("^NAGIOS.*$"));
+			}
 			//If we have a list of blacklist REGEXes, use them 
 			if (!m_regex.empty()) {
 				std::string  messageBody(reinterpret_cast<char*>(message->m_message));
 				for (std::regex regex : m_regex) {
 					bool ret =  std::regex_match(messageBody,regex);
 					//If the regex matches the message body, don't send the message
-					if (ret)
+					if (ret) {
 						regexmatch = true;
-						LogDebug("Blacklist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
+						LogDebug("Blacklist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, messageBody.c_str());
+					}
 				}
 			}
 
