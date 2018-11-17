@@ -1,0 +1,21 @@
+The REGEX functionality allows you to whitelist or blacklist messages based on
+pattern matching the message body itself (not the RIC).
+
+The options for this are:
+
+
+WhitelistRegexfile=
+BlacklistRegexfile=
+
+REGEXs are placed in the the respective textfile, one per line. These need to
+be a full match, i.e. they need to match the entire message, begining with ^
+and ending with $. 
+
+For example:
+
+^NAGIOS.*$ - matches all Nagios alerts
+
+^(G|M|2).+$ - Matches messages with the first character as a G.M or 2 - i.e.
+match all UK callsigns. 
+
+
