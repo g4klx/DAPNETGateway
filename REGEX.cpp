@@ -59,7 +59,7 @@ bool CREGEX::load()
 	}
 
 	size_t size = m_regex.size();
-	LogInfo("Loaded %u REGEX from file %s", size, regexFile.c_str());
+	LogInfo("Loaded %u REGEX from file %s", size, m_regexFile.c_str());
 
 	size = m_regex.size();
 	if (size == 0U)
