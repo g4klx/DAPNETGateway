@@ -22,7 +22,7 @@
 #include "Thread.h"
 #include "Timer.h"
 #include "Log.h"
-#include "REGEXes.h"
+#include "REGEX.h"
 #include <regex>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -110,8 +110,9 @@ m_schedule(NULL),
 m_allSlots(false),
 m_currentSlot(0U),
 m_sentCodewords(0U),
-m_mmdvmFree(false),
-m_regex()
+m_regexBlacklist(),
+m_regexWhitelist(),
+m_mmdvmFree(false)
 {
 }
 
@@ -266,9 +267,17 @@ int CDAPNETGateway::run()
 	}
 
 	std::vector<unsigned int> whiteList = m_conf.getWhiteList();
-	m_regexBlacklist = new CREGEX("/tmp/regexes.txt");
+	std::vector<std::regex> regexBlacklist;
+	std::vector<std::regex> regexWhitelist;
+
+	m_regexBlacklist = new CREGEX("/tmp/blregexes.txt");
 	if (m_regexBlacklist->load()) 
-		m_regex = m_regexBlacklist->get();
+		regexBlacklist = m_regexBlacklist->get();
+
+	m_regexWhitelist = new CREGEX("/tmp/wlregexes.txt");
+        if (m_regexWhitelist->load())
+                regexWhitelist = m_regexWhitelist->get();
+
 
 
 	for (;;) {
@@ -303,29 +312,39 @@ int CDAPNETGateway::run()
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
 			bool found = true;
-			bool regexmatch = false;
+			bool blacklistregexmatch = false;
+			bool whitelistregexmatch = true;
 
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
-			if (m_regex.empty()) {
-				m_regex.push_back(std::regex("^E.*$"));
-				m_regex.push_back(std::regex("^NAGIOS.*$"));
-			}
+			
+			std::string  messageBody(reinterpret_cast<char*>(message->m_message));
 			//If we have a list of blacklist REGEXes, use them 
-			if (!m_regex.empty()) {
-				std::string  messageBody(reinterpret_cast<char*>(message->m_message));
-				for (std::regex regex : m_regex) {
+			if (!regexBlacklist.empty()) {
+				for (std::regex regex : regexBlacklist) {
 					bool ret =  std::regex_match(messageBody,regex);
 					//If the regex matches the message body, don't send the message
 					if (ret) {
-						regexmatch = true;
+						blacklistregexmatch = true;
 						LogDebug("Blacklist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, messageBody.c_str());
 					}
 				}
 			}
 
-			if (found && !regexmatch) {
+			if(!regexWhitelist.empty() && !blacklistregexmatch) {
+                                for (std::regex regex : regexWhitelist) {
+                                        bool ret =  std::regex_match(messageBody,regex);
+                                        //If the regex does not match the message body, don't send the message
+                                        if (!ret) {
+                                                whitelistregexmatch = false;
+                                                LogDebug("No whitelist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, messageBody.c_str());
+                                        }
+                                }
+
+			}
+
+			if (found && !blacklistregexmatch && whitelistregexmatch) {
 				switch (message->m_functional) {
 					case FUNCTIONAL_ALPHANUMERIC:
 						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);

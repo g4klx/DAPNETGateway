@@ -24,7 +24,7 @@
 #include "POCSAGMessage.h"
 #include "StopWatch.h"
 #include "Conf.h"
-#include "REGEXes.h"
+#include "REGEX.h"
 
 #include <string>
 #include <deque>
@@ -43,13 +43,14 @@ private:
 	CConf                       m_conf;
 	CDAPNETNetwork*             m_dapnetNetwork;
 	CPOCSAGNetwork*             m_pocsagNetwork;
-	CREGEX*			    m_regexBlacklist;
 	std::deque<CPOCSAGMessage*> m_queue;
 	CStopWatch                  m_slotTimer;
 	bool*                       m_schedule;
 	bool                        m_allSlots;
 	unsigned int                m_currentSlot;
 	unsigned int                m_sentCodewords;
+        CREGEX*                     m_regexBlacklist;
+        CREGEX*                     m_regexWhitelist;
 	bool                        m_mmdvmFree;
 
 
@@ -60,7 +61,8 @@ private:
 	void loadSchedule();
 	bool sendMessage(CPOCSAGMessage* message) const;
 
-	std::vector<std::regex>	    m_regex;
+//	std::vector<std::regex>	    m_regexBlacklist;
+//	std::vector<std::regex>	    m_regexWhitelist;
 };
 
 #endif

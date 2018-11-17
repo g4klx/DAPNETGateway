@@ -16,15 +16,11 @@
 *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "REGEXes.h"
+#include "REGEX.h"
 #include "Log.h"
 
-#include <algorithm>
-#include <functional>
 #include <cstdio>
-#include <cassert>
 #include <cstring>
-#include <cctype>
 
 CREGEX::CREGEX(const std::string& regexFile) :
 m_regexFile(regexFile),
@@ -43,7 +39,6 @@ bool CREGEX::load()
 				continue;
 
 			const char* regexStr = ::strtok(buffer, "\r\n");
-			LogDebug("Process regex: %s",regexStr);
 			
 			if (regexStr != NULL) {
 				try {
