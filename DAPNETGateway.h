@@ -24,10 +24,12 @@
 #include "POCSAGMessage.h"
 #include "StopWatch.h"
 #include "Conf.h"
+#include "REGEX.h"
 
 #include <string>
 #include <deque>
 #include <vector>
+#include <regex>
 
 class CDAPNETGateway
 {
@@ -47,6 +49,8 @@ private:
 	bool                        m_allSlots;
 	unsigned int                m_currentSlot;
 	unsigned int                m_sentCodewords;
+        CREGEX*                     m_regexBlacklist;
+        CREGEX*                     m_regexWhitelist;
 	bool                        m_mmdvmFree;
 
 
@@ -56,6 +60,9 @@ private:
 	unsigned int calculateCodewords(const CPOCSAGMessage* message) const;
 	void loadSchedule();
 	bool sendMessage(CPOCSAGMessage* message) const;
+
+//	std::vector<std::regex>	    m_regexBlacklist;
+//	std::vector<std::regex>	    m_regexWhitelist;
 };
 
 #endif
