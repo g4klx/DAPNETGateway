@@ -275,8 +275,8 @@ int CDAPNETGateway::run()
 		regexBlacklist = m_regexBlacklist->get();
 
 	m_regexWhitelist = new CREGEX(m_conf.getwhitelistRegexfile());
-        if (m_regexWhitelist->load())
-                regexWhitelist = m_regexWhitelist->get();
+		if (m_regexWhitelist->load())
+		regexWhitelist = m_regexWhitelist->get();
 
 
 
@@ -318,7 +318,7 @@ int CDAPNETGateway::run()
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
-			
+
 			std::string  messageBody(reinterpret_cast<char*>(message->m_message));
 			//If we have a list of blacklist REGEXes, use them 
 			if (!regexBlacklist.empty()) {
@@ -333,15 +333,14 @@ int CDAPNETGateway::run()
 			}
 
 			if(!regexWhitelist.empty() && !blacklistRegexmatch) {
-                                for (std::regex regex : regexWhitelist) {
-                                        bool ret =  std::regex_match(messageBody,regex);
-                                        //If the regex does not match the message body, don't send the message
-                                        if (!ret) {
-                                                whitelistRegexmatch = false;
-                                                LogDebug("No whitelist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, messageBody.c_str());
-                                        }
-                                }
-
+				for (std::regex regex : regexWhitelist) {
+					bool ret =  std::regex_match(messageBody,regex);
+					//If the regex does not match the message body, don't send the message
+					if (!ret) {
+						whitelistRegexmatch = false;
+						LogDebug("No whitelist REGEX match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, messageBody.c_str());
+					}
+				}
 			}
 
 			if (found && !blacklistRegexmatch && whitelistRegexmatch) {

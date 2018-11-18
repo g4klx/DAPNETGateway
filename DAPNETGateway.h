@@ -49,8 +49,8 @@ private:
 	bool                        m_allSlots;
 	unsigned int                m_currentSlot;
 	unsigned int                m_sentCodewords;
-        CREGEX*                     m_regexBlacklist;
-        CREGEX*                     m_regexWhitelist;
+	CREGEX*                     m_regexBlacklist;
+	CREGEX*                     m_regexWhitelist;
 	bool                        m_mmdvmFree;
 
 
@@ -61,8 +61,6 @@ private:
 	void loadSchedule();
 	bool sendMessage(CPOCSAGMessage* message) const;
 
-//	std::vector<std::regex>	    m_regexBlacklist;
-//	std::vector<std::regex>	    m_regexWhitelist;
 };
 
 #endif

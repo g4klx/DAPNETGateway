@@ -36,8 +36,8 @@ public:
 
 private:
 	
-	std::string			m_regexFile;
-	std::vector<std::regex>		m_regex;
+	std::string              m_regexFile;
+	std::vector<std::regex>  m_regex;
 };
 
 #endif
