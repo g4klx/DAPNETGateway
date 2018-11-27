@@ -362,6 +362,7 @@ int CDAPNETGateway::run()
 				}
 
 				m_queue.push_front(message);
+				LogDebug("Messages in Queue %04u", m_queue.size());
 			}
 		}
 
