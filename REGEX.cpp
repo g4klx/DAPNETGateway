@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <cstring>
 
+
 CREGEX::CREGEX(const std::string& regexFile) :
 m_regexFile(regexFile),
 m_regex()
@@ -32,6 +33,13 @@ m_regex()
 
 bool CREGEX::load()
 {
+#if defined(__GNUC__) && (__GNUC__ <= 4) || (__GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+	LogError("REGEX is not properly supported in GCC vesions below 4.9. Not loading REGEX");
+	return false;
+}
+#else
+
+	
 	FILE* fp = ::fopen(m_regexFile.c_str(), "rt");
 	if (fp != NULL) {
 		char buffer[100U];
@@ -67,6 +75,8 @@ bool CREGEX::load()
 
 	return true;
 }
+
+#endif
 
 std::vector<std::regex>  CREGEX::get()
 {
