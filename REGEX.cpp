@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <cstring>
 
+
 CREGEX::CREGEX(const std::string& regexFile) :
 m_regexFile(regexFile),
 m_regex()
@@ -31,7 +32,19 @@ m_regex()
 }
 
 bool CREGEX::load()
+/* Older versions of GCC appear to support REGEX but silently fail to match. Even
+ * though the headers exist and the code compiles and runs cleanly. The below #if block 
+ * stops the REGEXs being loaded in these cases, effectively disabling REGEX functionality. 
+ * The loading code is replaced with a log entry to show the user this has happened.
+*/
 {
+#if defined(__GNUC__) && (__GNUC__ <= 4) || (__GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+	LogError("REGEX is not properly supported in GCC vesions below 4.9. Not loading REGEX");
+	return false;
+}
+#else
+
+	
 	FILE* fp = ::fopen(m_regexFile.c_str(), "rt");
 	if (fp != NULL) {
 		char buffer[100U];
@@ -67,6 +80,8 @@ bool CREGEX::load()
 
 	return true;
 }
+
+#endif
 
 std::vector<std::regex>  CREGEX::get()
 {
