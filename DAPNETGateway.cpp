@@ -267,6 +267,8 @@ int CDAPNETGateway::run()
 	}
 
 	std::vector<unsigned int> whiteList = m_conf.getWhiteList();
+        std::vector<unsigned int> blackList = m_conf.getBlackList();
+
 	std::vector<std::regex> regexBlacklist;
 	std::vector<std::regex> regexWhitelist;
 
@@ -312,12 +314,18 @@ int CDAPNETGateway::run()
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != NULL) {
 			bool found = true;
+			bool blackListRIC = false;
 			bool blacklistRegexmatch = false;
 			bool whitelistRegexmatch = true;
 
 			// If we have a white list of RICs, use it.
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
+
+                        // If we have a black list of RICs, use it.
+                        if (!blackList.empty())
+                                blackListRIC = std::find(blackList.begin(), blackList.end(), message->m_ric) != blackList.end();
+
 
 			std::string  messageBody(reinterpret_cast<char*>(message->m_message));
 			//If we have a list of blacklist REGEXes, use them 
@@ -343,7 +351,7 @@ int CDAPNETGateway::run()
 				}
 			}
 
-			if (found && !blacklistRegexmatch && whitelistRegexmatch) {
+			if (found && !blackListRIC  && !blacklistRegexmatch && whitelistRegexmatch) {
 				switch (message->m_functional) {
 					case FUNCTIONAL_ALPHANUMERIC:
 						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
