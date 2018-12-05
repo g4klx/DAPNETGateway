@@ -107,7 +107,7 @@ bool CConf::read()
 						m_whiteList.push_back(ric);
 					p = ::strtok(NULL, ",\r\n");
 				}
-                        else if (::strcmp(key, "BlackList") == 0) {
+			} else if (::strcmp(key, "BlackList") == 0) {
                                 char* p = ::strtok(value, ",\r\n");
                                 while (p != NULL) {
                                         unsigned int ric = (unsigned int)::atoi(p);
