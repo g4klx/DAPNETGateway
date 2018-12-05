@@ -323,8 +323,11 @@ int CDAPNETGateway::run()
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
 
                         // If we have a black list of RICs, use it.
-                        if (!blackList.empty())
+                        if (!blackList.empty()) {
                                 blackListRIC = std::find(blackList.begin(), blackList.end(), message->m_ric) != blackList.end();
+				LogDebug("Blacklist match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, messageBody.c_str());
+
+			}
 
 
 			std::string  messageBody(reinterpret_cast<char*>(message->m_message));
