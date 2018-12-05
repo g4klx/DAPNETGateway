@@ -33,6 +33,7 @@ public:
   // The General section
   std::string  getCallsign() const;
   std::vector<unsigned int> getWhiteList() const;
+  std::vector<unsigned int> getBlackList() const;
   std::string  getblacklistRegexfile() const;
   std::string  getwhitelistRegexfile() const;
   std::string  getRptAddress() const;
@@ -58,6 +59,8 @@ private:
 
   std::string  m_callsign;
   std::vector<unsigned int> m_whiteList;
+  std::vector<unsigned int> m_blackList;
+
   std::string  m_blacklistRegexfile;
   std::string  m_whitelistRegexfile;
   std::string  m_rptAddress;
