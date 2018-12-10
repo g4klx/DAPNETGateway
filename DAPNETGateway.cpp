@@ -267,7 +267,7 @@ int CDAPNETGateway::run()
 	}
 
 	std::vector<unsigned int> whiteList = m_conf.getWhiteList();
-        std::vector<unsigned int> blackList = m_conf.getBlackList();
+	std::vector<unsigned int> blackList = m_conf.getBlackList();
 
 	std::vector<std::regex> regexBlacklist;
 	std::vector<std::regex> regexWhitelist;
@@ -279,7 +279,6 @@ int CDAPNETGateway::run()
 	m_regexWhitelist = new CREGEX(m_conf.getwhitelistRegexfile());
 		if (m_regexWhitelist->load())
 		regexWhitelist = m_regexWhitelist->get();
-
 
 
 	for (;;) {
@@ -322,14 +321,11 @@ int CDAPNETGateway::run()
 			if (!whiteList.empty())
 				found = std::find(whiteList.begin(), whiteList.end(), message->m_ric) != whiteList.end();
 
-                        // If we have a black list of RICs, use it.
-                        if (!blackList.empty())
-                                blackListRIC = std::find(blackList.begin(), blackList.end(), message->m_ric) != blackList.end();
+			// If we have a black list of RICs, use it.
+			if (!blackList.empty())
+				blackListRIC = std::find(blackList.begin(), blackList.end(), message->m_ric) != blackList.end();
 			if (blackListRIC)
 				LogDebug("Blacklist match: Not queueing message to %07u, type %u, message: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);
-
-			
-
 
 			std::string  messageBody(reinterpret_cast<char*>(message->m_message));
 			//If we have a list of blacklist REGEXes, use them 
@@ -355,7 +351,7 @@ int CDAPNETGateway::run()
 				}
 			}
 
-			if (found && !blackListRIC  && !blacklistRegexmatch && whitelistRegexmatch) {
+			if (found && !blackListRIC && !blacklistRegexmatch && whitelistRegexmatch) {
 				switch (message->m_functional) {
 					case FUNCTIONAL_ALPHANUMERIC:
 						LogDebug("Queueing message to %07u, type %u, func Alphanumeric: \"%.*s\"", message->m_ric, message->m_type, message->m_length, message->m_message);

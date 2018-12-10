@@ -107,16 +107,17 @@ bool CConf::read()
 						m_whiteList.push_back(ric);
 					p = ::strtok(NULL, ",\r\n");
 				}
-			} else if (::strcmp(key, "BlackList") == 0) {
-                                char* p = ::strtok(value, ",\r\n");
-                                while (p != NULL) {
-                                        unsigned int ric = (unsigned int)::atoi(p);
-                                        if (ric > 0U)
-                                                m_blackList.push_back(ric);
-                                        p = ::strtok(NULL, ",\r\n");
-                                }
-
-			} else if (::strcmp(key,"BlacklistRegexfile") == 0)
+			}
+			else if (::strcmp(key, "BlackList") == 0) {
+				char* p = ::strtok(value, ",\r\n");
+				while (p != NULL) {
+					unsigned int ric = (unsigned int)::atoi(p);
+					if (ric > 0U)
+						m_blackList.push_back(ric);
+					p = ::strtok(NULL, ",\r\n");
+				}
+			}
+			else if (::strcmp(key,"BlacklistRegexfile") == 0)
 				m_blacklistRegexfile = value;
 			else if (::strcmp(key,"WhitelistRegexfile") == 0)
 				m_whitelistRegexfile = value;
@@ -172,7 +173,7 @@ std::vector<uint32_t> CConf::getWhiteList() const
 
 std::vector<uint32_t> CConf::getBlackList() const
 {
-        return m_blackList;
+	return m_blackList;
 }
 
 std::string CConf::getblacklistRegexfile() const
