@@ -272,10 +272,12 @@ int CDAPNETGateway::run()
 	std::vector<std::regex> regexBlacklist;
 	std::vector<std::regex> regexWhitelist;
 
+	LogMessage("Initializing blacklist");
 	m_regexBlacklist = new CREGEX(m_conf.getblacklistRegexfile());
 	if (m_regexBlacklist->load()) 
 		regexBlacklist = m_regexBlacklist->get();
 
+	LogMessage("Initializing whitelist");
 	m_regexWhitelist = new CREGEX(m_conf.getwhitelistRegexfile());
 		if (m_regexWhitelist->load())
 		regexWhitelist = m_regexWhitelist->get();
