@@ -39,7 +39,7 @@ bool CREGEX::load()
 */
 {
 #if defined(__GNUC__) && (__GNUC__ <= 4) || (__GNUC__ == 4 && __GNUC_MINOR__ <= 9)
-	LogError("REGEX is not properly supported in GCC vesions below 4.9. Not loading REGEX");
+	LogError("REGEX is not properly supported in GCC versions below 4.9. Not loading REGEX");
 	return false;
 }
 #else
