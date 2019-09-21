@@ -34,8 +34,10 @@ m_timeQueued()
 	assert(message != NULL);
 	assert(length > 0U);
 
-	m_message = new unsigned char[length];
+	m_message = new unsigned char[length + 1];
+
 	::memcpy(m_message, message, length);
+	m_message[length] = '\0';
 
 	m_timeQueued.start();
 }
