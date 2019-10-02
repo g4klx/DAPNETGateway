@@ -42,12 +42,12 @@ public:
 
 	bool open();
 
-	int  read(unsigned char* buffer, unsigned int length, in_addr& address, unsigned int& port);
-	bool write(const unsigned char* buffer, unsigned int length, const in_addr& address, unsigned int port);
+	int  read(unsigned char* buffer, unsigned int length, sockaddr_storage& address);
+	bool write(const unsigned char* buffer, unsigned int length, const sockaddr_storage& address);
 
 	void close();
 
-	static in_addr lookup(const std::string& hostName);
+	static int lookup(const std::string& hostName, unsigned int port, sockaddr_storage &address);
 
 private:
 	std::string    m_address;

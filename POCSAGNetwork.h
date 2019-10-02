@@ -39,10 +39,9 @@ public:
 	void close();
 
 private:
-	CUDPSocket   m_socket;
-	in_addr      m_address;
-	unsigned int m_port;
-	bool         m_debug;
+	CUDPSocket       m_socket;
+	sockaddr_storage m_address;
+	bool             m_debug;
 };
 
 #endif

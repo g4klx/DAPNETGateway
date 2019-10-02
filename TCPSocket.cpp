@@ -71,18 +71,13 @@ bool CTCPSocket::open()
 		return false;
 	}
 
-	struct sockaddr_in addr;
-	::memset(&addr, 0x00, sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port   = htons(m_port);
-	addr.sin_addr   = CUDPSocket::lookup(m_address);
-
-	if (addr.sin_addr.s_addr == INADDR_NONE) {
+	struct sockaddr_storage addr;
+	if (CUDPSocket::lookup(m_address, m_port, addr)) {
 		close();
 		return false;
 	}
 
-	if (::connect(m_fd, (sockaddr*)&addr, sizeof(struct sockaddr_in)) == -1) {
+	if (::connect(m_fd, (sockaddr*)&addr, ((sockaddr*)&addr)->sa_len) == -1) {
 #if defined(_WIN32) || defined(_WIN64)
 		LogError("Cannot connect the TCP client socket, err=%d", ::GetLastError());
 #else

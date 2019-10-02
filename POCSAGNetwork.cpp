@@ -28,13 +28,12 @@
 CPOCSAGNetwork::CPOCSAGNetwork(const std::string& localAddress, unsigned int localPort, const std::string& remoteAddress, unsigned int remotePort, bool debug) :
 m_socket(localAddress, localPort),
 m_address(),
-m_port(remotePort),
 m_debug(debug)
 {
 	assert(!remoteAddress.empty());
 	assert(remotePort > 0U);
 
-	m_address = CUDPSocket::lookup(remoteAddress);
+	CUDPSocket::lookup(remoteAddress, remotePort, m_address);
 }
 
 CPOCSAGNetwork::~CPOCSAGNetwork()
@@ -71,20 +70,37 @@ bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
 	if (m_debug)
 		CUtils::dump(1U, "POCSAG Network Data Sent", data, message->m_length + 10U);
 
-	return m_socket.write(data, message->m_length + 10U, m_address, m_port);
+	return m_socket.write(data, message->m_length + 10U, m_address);
 }
 
 unsigned int CPOCSAGNetwork::read(unsigned char* data)
 {
 	assert(data != NULL);
 
-	in_addr address;
-	unsigned int port;
-	int length = m_socket.read(data, 1U, address, port);
+	sockaddr_storage address;
+	int length = m_socket.read(data, 1U, address);
 	if (length <= 0)
 		return 0U;
 
-	if (address.s_addr != m_address.s_addr || port != m_port)
+	int invalid_addr, invalid_port;
+	switch (address.ss_family) {
+	case AF_INET:
+		struct sockaddr_in *paddr4, *pm_addr4;
+		paddr4 = (struct sockaddr_in *)&address;
+		pm_addr4 = (struct sockaddr_in *)&m_address;
+		invalid_addr = (paddr4->sin_addr.s_addr != pm_addr4->sin_addr.s_addr);
+		invalid_port = (paddr4->sin_port != pm_addr4->sin_port);
+		break;
+	case AF_INET6:
+		struct sockaddr_in6 *paddr6, *pm_addr6;
+		paddr6 = (struct sockaddr_in6 *)&address;
+		pm_addr6 = (struct sockaddr_in6 *)&m_address;
+		invalid_addr = ::memcmp(paddr6->sin6_addr.s6_addr, pm_addr6->sin6_addr.s6_addr, sizeof(struct in6_addr));
+		invalid_port = (paddr6->sin6_port != pm_addr6->sin6_port);
+		break;
+	}
+
+	if (invalid_addr || invalid_port)
 		return 0U;
 
 	if (m_debug)
