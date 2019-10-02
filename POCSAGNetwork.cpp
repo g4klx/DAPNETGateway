@@ -28,12 +28,13 @@
 CPOCSAGNetwork::CPOCSAGNetwork(const std::string& localAddress, unsigned int localPort, const std::string& remoteAddress, unsigned int remotePort, bool debug) :
 m_socket(localAddress, localPort),
 m_address(),
+m_addrlen(),
 m_debug(debug)
 {
 	assert(!remoteAddress.empty());
 	assert(remotePort > 0U);
 
-	CUDPSocket::lookup(remoteAddress, remotePort, m_address);
+	CUDPSocket::lookup(remoteAddress, remotePort, m_address, m_addrlen);
 }
 
 CPOCSAGNetwork::~CPOCSAGNetwork()
@@ -70,7 +71,7 @@ bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
 	if (m_debug)
 		CUtils::dump(1U, "POCSAG Network Data Sent", data, message->m_length + 10U);
 
-	return m_socket.write(data, message->m_length + 10U, m_address);
+	return m_socket.write(data, message->m_length + 10U, m_address, m_addrlen);
 }
 
 unsigned int CPOCSAGNetwork::read(unsigned char* data)
@@ -78,7 +79,8 @@ unsigned int CPOCSAGNetwork::read(unsigned char* data)
 	assert(data != NULL);
 
 	sockaddr_storage address;
-	int length = m_socket.read(data, 1U, address);
+	unsigned int addrlen;
+	int length = m_socket.read(data, 1U, address, addrlen);
 	if (length <= 0)
 		return 0U;
 

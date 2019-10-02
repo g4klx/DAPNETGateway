@@ -62,7 +62,7 @@ CUDPSocket::~CUDPSocket()
 #endif
 }
 
-int CUDPSocket::lookup(const std::string& hostname, unsigned int port, sockaddr_storage &addr)
+int CUDPSocket::lookup(const std::string& hostname, unsigned int port, sockaddr_storage &addr, unsigned int &address_length)
 {
 	int err;
 	std::string portstr = std::to_string(port);
@@ -80,6 +80,7 @@ int CUDPSocket::lookup(const std::string& hostname, unsigned int port, sockaddr_
 	}
 
 	::memcpy(&addr, res->ai_addr, res->ai_addrlen);
+	address_length = res->ai_addrlen;
 
 	freeaddrinfo(res);
 	return 0;
@@ -89,9 +90,10 @@ bool CUDPSocket::open()
 {
 	int err;
 	sockaddr_storage addr;
+	unsigned int addrlen;
 
 	/* to determine protocol family, call lookup() first. */
-	err = lookup(m_address.empty() ? "0.0.0.0" : m_address.c_str(), m_port, addr);
+	err = lookup(m_address.empty() ? "0.0.0.0" : m_address.c_str(), m_port, addr, addrlen);
 	if (err) {
 		LogError("The local address is invalid - %s", m_address.c_str());
 		return false;
@@ -118,7 +120,7 @@ bool CUDPSocket::open()
 			return false;
 		}
 
-		if (::bind(m_fd, (sockaddr*)&addr, addr.ss_len) == -1) {
+		if (::bind(m_fd, (sockaddr*)&addr, addrlen) == -1) {
 #if defined(_WIN32) || defined(_WIN64)
 			LogError("Cannot bind the UDP address, err: %lu", ::GetLastError());
 #else
@@ -133,7 +135,7 @@ bool CUDPSocket::open()
 	return true;
 }
 
-int CUDPSocket::read(unsigned char* buffer, unsigned int length, sockaddr_storage& address)
+int CUDPSocket::read(unsigned char* buffer, unsigned int length, sockaddr_storage& address, unsigned int &address_length)
 {
 	assert(buffer != NULL);
 	assert(length > 0U);
@@ -185,18 +187,19 @@ int CUDPSocket::read(unsigned char* buffer, unsigned int length, sockaddr_storag
 		return -1;
 	}
 
+	address_length = size;
 	return len;
 }
 
-bool CUDPSocket::write(const unsigned char* buffer, unsigned int length, const sockaddr_storage& address)
+bool CUDPSocket::write(const unsigned char* buffer, unsigned int length, const sockaddr_storage& address, unsigned int address_length)
 {
 	assert(buffer != NULL);
 	assert(length > 0U);
 
 #if defined(_WIN32) || defined(_WIN64)
-	int ret = ::sendto(m_fd, (char *)buffer, length, 0, (sockaddr *)&address, ((sockaddr *)&address)->sa_len);
+	int ret = ::sendto(m_fd, (char *)buffer, length, 0, (sockaddr *)&address, address_length);
 #else
-	ssize_t ret = ::sendto(m_fd, (char *)buffer, length, 0, (sockaddr *)&address, ((sockaddr *)&address)->sa_len);
+	ssize_t ret = ::sendto(m_fd, (char *)buffer, length, 0, (sockaddr *)&address, address_length);
 #endif
 	if (ret < 0) {
 #if defined(_WIN32) || defined(_WIN64)

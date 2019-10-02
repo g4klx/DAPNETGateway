@@ -72,12 +72,13 @@ bool CTCPSocket::open()
 	}
 
 	struct sockaddr_storage addr;
-	if (CUDPSocket::lookup(m_address, m_port, addr)) {
+	unsigned int addrlen;
+	if (CUDPSocket::lookup(m_address, m_port, addr, addrlen)) {
 		close();
 		return false;
 	}
 
-	if (::connect(m_fd, (sockaddr*)&addr, ((sockaddr*)&addr)->sa_len) == -1) {
+	if (::connect(m_fd, (sockaddr*)&addr, addrlen) == -1) {
 #if defined(_WIN32) || defined(_WIN64)
 		LogError("Cannot connect the TCP client socket, err=%d", ::GetLastError());
 #else
