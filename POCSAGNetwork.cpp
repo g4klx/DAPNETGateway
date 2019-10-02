@@ -98,6 +98,9 @@ unsigned int CPOCSAGNetwork::read(unsigned char* data)
 		invalid_addr = ::memcmp(paddr6->sin6_addr.s6_addr, pm_addr6->sin6_addr.s6_addr, sizeof(struct in6_addr));
 		invalid_port = (paddr6->sin6_port != pm_addr6->sin6_port);
 		break;
+	default:
+		invalid_addr = invalid_port = 1;
+		break;
 	}
 
 	if (invalid_addr || invalid_port)
