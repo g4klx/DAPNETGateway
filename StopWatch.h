@@ -20,6 +20,7 @@
 #define	STOPWATCH_H
 
 #if defined(_WIN32) || defined(_WIN64)
+#define _WINSOCKAPI_
 #include <windows.h>
 #else
 #include <sys/time.h>

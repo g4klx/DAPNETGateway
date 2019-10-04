@@ -31,7 +31,8 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #else
-#include <winsock.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #endif
 
 class CUDPSocket {
