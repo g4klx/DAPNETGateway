@@ -68,19 +68,21 @@ int CUDPSocket::lookup(const std::string& hostname, unsigned int port, sockaddr_
 	std::string portstr = std::to_string(port);
 	struct addrinfo hints, *res;
 
-	::memset(&addr, 0, sizeof(sockaddr_storage));
 	::memset(&hints, 0, sizeof(struct addrinfo));
-
 	hints.ai_flags = AI_NUMERICSERV;
 
 	err = getaddrinfo(hostname.c_str(), portstr.c_str(), &hints, &res);
 	if (err) {
+		sockaddr_in *paddr = (sockaddr_in *)&addr;
+		::memset(paddr, 0, address_length = sizeof(sockaddr_in));
+		paddr->sin_family = AF_INET;
+		paddr->sin_port = htons(port);
+		paddr->sin_addr.s_addr = htonl(INADDR_NONE);
 		LogError("Cannot find address for host %s", hostname.c_str());
 		return err;
 	}
 
-	::memcpy(&addr, res->ai_addr, res->ai_addrlen);
-	address_length = res->ai_addrlen;
+	::memcpy(&addr, res->ai_addr, address_length = res->ai_addrlen);
 
 	freeaddrinfo(res);
 	return 0;
