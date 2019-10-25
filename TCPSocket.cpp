@@ -61,20 +61,19 @@ bool CTCPSocket::open()
 	if (m_address.empty() || m_port == 0U)
 		return false;
 
-	m_fd = ::socket(PF_INET, SOCK_STREAM, 0);
+	/* to determine protocol family, call lookup() first.*/
+	sockaddr_storage addr;
+	unsigned int addrlen;
+	if (CUDPSocket::lookup(m_address, m_port, addr, addrlen))
+		return false;
+
+	m_fd = ::socket(addr.ss_family, SOCK_STREAM, 0);
 	if (m_fd < 0) {
 #if defined(_WIN32) || defined(_WIN64)
 		LogError("Cannot create the TCP client socket, err=%d", ::GetLastError());
 #else
 		LogError("Cannot create the TCP client socket, err=%d", errno);
 #endif
-		return false;
-	}
-
-	struct sockaddr_storage addr;
-	unsigned int addrlen;
-	if (CUDPSocket::lookup(m_address, m_port, addr, addrlen)) {
-		close();
 		return false;
 	}
 
