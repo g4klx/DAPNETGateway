@@ -84,28 +84,7 @@ unsigned int CPOCSAGNetwork::read(unsigned char* data)
 	if (length <= 0)
 		return 0U;
 
-	int invalid_addr, invalid_port;
-	switch (address.ss_family) {
-	case AF_INET:
-		struct sockaddr_in *paddr4, *pm_addr4;
-		paddr4 = (struct sockaddr_in *)&address;
-		pm_addr4 = (struct sockaddr_in *)&m_address;
-		invalid_addr = (paddr4->sin_addr.s_addr != pm_addr4->sin_addr.s_addr);
-		invalid_port = (paddr4->sin_port != pm_addr4->sin_port);
-		break;
-	case AF_INET6:
-		struct sockaddr_in6 *paddr6, *pm_addr6;
-		paddr6 = (struct sockaddr_in6 *)&address;
-		pm_addr6 = (struct sockaddr_in6 *)&m_address;
-		invalid_addr = ::memcmp(paddr6->sin6_addr.s6_addr, pm_addr6->sin6_addr.s6_addr, sizeof(struct in6_addr));
-		invalid_port = (paddr6->sin6_port != pm_addr6->sin6_port);
-		break;
-	default:
-		invalid_addr = invalid_port = 1;
-		break;
-	}
-
-	if (invalid_addr || invalid_port)
+	if (!CUDPSocket::match(address, m_address))
 		return 0U;
 
 	if (m_debug)
