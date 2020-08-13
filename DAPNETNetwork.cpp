@@ -65,7 +65,7 @@ bool CDAPNETNetwork::login()
 	std::transform(m_callsign.begin(), m_callsign.end(), m_callsign.begin(), ::tolower);
 
 	char login[200U];
-	::snprintf(login, 200, "[MMDVM v%s %s %s]\r\n", m_version, m_callsign.c_str(), m_authKey.c_str());
+	::snprintf(login, 200, "[DAPNETGateway v%s %s %s]\r\n", m_version, m_callsign.c_str(), m_authKey.c_str());
 
 	return write((unsigned char*)login);
 }
