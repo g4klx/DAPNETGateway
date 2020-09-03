@@ -14,5 +14,8 @@ DAPNETGateway:	$(OBJECTS)
 %.o: %.cpp
 		$(CXX) $(CFLAGS) -c -o $@ $<
 
+install:
+		install -m 755 DAPNETGateway /usr/local/bin/
+
 clean:
 		$(RM) DAPNETGateway *.o *.d *.bak *~
