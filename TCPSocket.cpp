@@ -64,7 +64,7 @@ bool CTCPSocket::open()
 	/* to determine protocol family, call lookup() first.*/
 	sockaddr_storage addr;
 	unsigned int addrlen;
-	if (CUDPSocket::lookup(m_address, m_port, addr, addrlen))
+	if (CUDPSocket::lookup(m_address, m_port, addr, addrlen) != 0)
 		return false;
 
 	m_fd = ::socket(addr.ss_family, SOCK_STREAM, 0);

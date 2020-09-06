@@ -40,8 +40,8 @@ public:
 
 private:
 	CUDPSocket       m_socket;
-	sockaddr_storage m_address;
-	unsigned int     m_addrlen;
+	sockaddr_storage m_addr;
+	unsigned int     m_addrLen;
 	bool             m_debug;
 };
 

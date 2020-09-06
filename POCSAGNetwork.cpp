@@ -27,14 +27,15 @@
 
 CPOCSAGNetwork::CPOCSAGNetwork(const std::string& localAddress, unsigned int localPort, const std::string& remoteAddress, unsigned int remotePort, bool debug) :
 m_socket(localAddress, localPort),
-m_address(),
-m_addrlen(),
+m_addr(),
+m_addrLen(0U),
 m_debug(debug)
 {
 	assert(!remoteAddress.empty());
 	assert(remotePort > 0U);
 
-	CUDPSocket::lookup(remoteAddress, remotePort, m_address, m_addrlen);
+	if (CUDPSocket::lookup(remoteAddress, remotePort, m_addr, m_addrLen) != 0)
+		m_addrLen = 0U;
 }
 
 CPOCSAGNetwork::~CPOCSAGNetwork()
@@ -43,9 +44,14 @@ CPOCSAGNetwork::~CPOCSAGNetwork()
 
 bool CPOCSAGNetwork::open()
 {
+	if (m_addrLen == 0U) {
+		LogError("Unable to resolve the address of the host");
+		return false;
+	}
+
 	LogMessage("Opening POCSAG network connection");
 
-	return m_socket.open();
+	return m_socket.open(m_addr);
 }
 
 bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
@@ -71,7 +77,7 @@ bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
 	if (m_debug)
 		CUtils::dump(1U, "POCSAG Network Data Sent", data, message->m_length + 10U);
 
-	return m_socket.write(data, message->m_length + 10U, m_address, m_addrlen);
+	return m_socket.write(data, message->m_length + 10U, m_addr, m_addrLen);
 }
 
 unsigned int CPOCSAGNetwork::read(unsigned char* data)
@@ -79,13 +85,15 @@ unsigned int CPOCSAGNetwork::read(unsigned char* data)
 	assert(data != NULL);
 
 	sockaddr_storage address;
-	unsigned int addrlen;
-	int length = m_socket.read(data, 1U, address, addrlen);
+	unsigned int addrLen;
+	int length = m_socket.read(data, 1U, address, addrLen);
 	if (length <= 0)
 		return 0U;
 
-	if (!CUDPSocket::match(address, m_address))
+	if (!CUDPSocket::match(address, m_addr)) {
+		LogWarning("Received a packet from an unknown address");
 		return 0U;
+	}
 
 	if (m_debug)
 		CUtils::dump(1U, "POCSAG Network Data Received", data, length);
