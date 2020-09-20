@@ -21,6 +21,7 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #define _WINSOCKAPI_
+#include <WS2tcpip.h>
 #include <windows.h>
 #else
 #include <sys/time.h>
