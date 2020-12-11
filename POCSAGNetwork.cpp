@@ -51,7 +51,7 @@ bool CPOCSAGNetwork::open()
 
 	LogMessage("Opening POCSAG network connection");
 
-	return m_socket.open(m_addr);
+	return m_socket.open(m_addr.ss_family);
 }
 
 bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
