@@ -180,6 +180,8 @@ bool CUDPSocket::open(const unsigned int index, const unsigned int af, const std
 	hints.ai_flags  = AI_PASSIVE;
 	hints.ai_family = af;
 
+	close(index);
+
 	/* to determine protocol family, call lookup() first. */
 	int err = lookup(address, port, addr, addrlen, hints);
 	if (err != 0) {
@@ -343,13 +345,13 @@ bool CUDPSocket::write(const unsigned char* buffer, unsigned int length, const s
 
 void CUDPSocket::close()
 {
-	for (int i = 0; i < UDP_SOCKET_MAX; i++)
-		close(m_fd[i]);
+	for (unsigned int i = 0; i < UDP_SOCKET_MAX; i++)
+		close(i);
 }
 
 void CUDPSocket::close(const unsigned int index)
 {
- 	if (m_fd[index] >= 0) {
+	if ((index < UDP_SOCKET_MAX) && (m_fd[index] >= 0)) {
 #if defined(_WIN32) || defined(_WIN64)
 		::closesocket(m_fd[index]);
 #else
