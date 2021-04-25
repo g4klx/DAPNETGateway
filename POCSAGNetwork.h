@@ -27,7 +27,7 @@
 
 class CPOCSAGNetwork {
 public:
-	CPOCSAGNetwork(const std::string& localAddress, unsigned int localPort, const std::string& remoteAddress, unsigned int remotePort, bool debug);
+	CPOCSAGNetwork(const std::string& localAddress, unsigned short localPort, const std::string& remoteAddress, unsigned short remotePort, bool debug);
 	~CPOCSAGNetwork();
 
 	bool open();

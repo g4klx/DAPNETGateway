@@ -28,7 +28,7 @@
 
 class CDAPNETNetwork {
 public:
-	CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedIn, int failCount, bool debug);
+	CDAPNETNetwork(const std::string& address, unsigned short port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedIn, int failCount, bool debug);
 	~CDAPNETNetwork();
 
 	bool open();

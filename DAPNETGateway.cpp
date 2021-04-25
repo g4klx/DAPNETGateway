@@ -213,9 +213,9 @@ int CDAPNETGateway::run()
 	bool debug             = m_conf.getDAPNETDebug();
 
 	std::string rptAddress = m_conf.getRptAddress();
-	unsigned int rptPort   = m_conf.getRptPort();
+	unsigned short rptPort = m_conf.getRptPort();
 	std::string myAddress  = m_conf.getMyAddress();
-	unsigned int myPort    = m_conf.getMyPort();
+	unsigned short myPort  = m_conf.getMyPort();
 
 	m_pocsagNetwork = new CPOCSAGNetwork(myAddress, myPort, rptAddress, rptPort, debug);
 	ret = m_pocsagNetwork->open();
@@ -228,7 +228,7 @@ int CDAPNETGateway::run()
 
 	std::string callsign      = m_conf.getCallsign();
 	std::string dapnetAddress = m_conf.getDAPNETAddress();
-	unsigned int dapnetPort   = m_conf.getDAPNETPort();
+	unsigned short dapnetPort = m_conf.getDAPNETPort();
 	std::string dapnetAuthKey = m_conf.getDAPNETAuthKey();
 
 	if (dapnetAuthKey.length() == 0 || dapnetAuthKey == "TOPSECRET") {

@@ -145,11 +145,11 @@ bool CConf::read()
 			else if (::strcmp(key, "RptAddress") == 0)
 				m_rptAddress = value;
 			else if (::strcmp(key, "RptPort") == 0)
-				m_rptPort = (unsigned int)::atoi(value);
+				m_rptPort = (unsigned short)::atoi(value);
 			else if (::strcmp(key, "LocalAddress") == 0)
 				m_myAddress = value;
 			else if (::strcmp(key, "LocalPort") == 0)
-				m_myPort = (unsigned int)::atoi(value);
+				m_myPort = (unsigned short)::atoi(value);
 			else if (::strcmp(key, "Daemon") == 0)
 				m_daemon = ::atoi(value) == 1;
 		} else if (section == SECTION_LOG) {
@@ -167,7 +167,7 @@ bool CConf::read()
 			if (::strcmp(key, "Address") == 0)
 				m_dapnetAddress = value;
 			else if (::strcmp(key, "Port") == 0)
-				m_dapnetPort = (unsigned int)::atoi(value);
+				m_dapnetPort = (unsigned short)::atoi(value);
 			else if (::strcmp(key, "AuthKey") == 0) {
 				for (unsigned int i = 0U; value[i] != '\0'; i++) {
 					if (!::isspace(value[i]))
@@ -214,7 +214,7 @@ std::string CConf::getRptAddress() const
 	return m_rptAddress;
 }
 
-unsigned int CConf::getRptPort() const
+unsigned short CConf::getRptPort() const
 {
 	return m_rptPort;
 }
@@ -224,7 +224,7 @@ std::string CConf::getMyAddress() const
 	return m_myAddress;
 }
 
-unsigned int CConf::getMyPort() const
+unsigned short CConf::getMyPort() const
 {
 	return m_myPort;
 }
@@ -264,7 +264,7 @@ std::string CConf::getDAPNETAddress() const
 	return m_dapnetAddress;
 }
 
-unsigned int CConf::getDAPNETPort() const
+unsigned short CConf::getDAPNETPort() const
 {
 	return m_dapnetPort;
 }
