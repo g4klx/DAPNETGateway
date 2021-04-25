@@ -37,9 +37,9 @@ public:
   std::string  getblacklistRegexfile() const;
   std::string  getwhitelistRegexfile() const;
   std::string  getRptAddress() const;
-  unsigned int getRptPort() const;
+  unsigned short getRptPort() const;
   std::string  getMyAddress() const;
-  unsigned int getMyPort() const;
+  unsigned short getMyPort() const;
   bool         getDaemon() const;
 
   // The Log section
@@ -51,7 +51,7 @@ public:
 
   // The DAPNET section
   std::string  getDAPNETAddress() const;
-  unsigned int getDAPNETPort() const;
+  unsigned short getDAPNETPort() const;
   std::string  getDAPNETAuthKey() const;
   bool         getDAPNETDebug() const;
 
@@ -65,9 +65,9 @@ private:
   std::string  m_blacklistRegexfile;
   std::string  m_whitelistRegexfile;
   std::string  m_rptAddress;
-  unsigned int m_rptPort;
+  unsigned short m_rptPort;
   std::string  m_myAddress;
-  unsigned int m_myPort;
+  unsigned short m_myPort;
   bool         m_daemon;
 
   unsigned int m_logDisplayLevel;
@@ -77,7 +77,7 @@ private:
   bool         m_logFileRotate;
 
   std::string  m_dapnetAddress;
-  unsigned int m_dapnetPort;
+  unsigned short m_dapnetPort;
   std::string  m_dapnetAuthKey;
   bool         m_dapnetDebug;
 };

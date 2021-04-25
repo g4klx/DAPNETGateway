@@ -29,7 +29,7 @@
 
 const unsigned int BUFFER_LENGTH = 200U;
 
-CDAPNETNetwork::CDAPNETNetwork(const std::string& address, unsigned int port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedIn, int failCount, bool debug) :
+CDAPNETNetwork::CDAPNETNetwork(const std::string& address, unsigned short port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedIn, int failCount, bool debug) :
 m_socket(address, port),
 m_callsign(callsign),
 m_authKey(authKey),

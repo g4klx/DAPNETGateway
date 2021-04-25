@@ -25,7 +25,7 @@
 #include <cstring>
 
 
-CPOCSAGNetwork::CPOCSAGNetwork(const std::string& localAddress, unsigned int localPort, const std::string& remoteAddress, unsigned int remotePort, bool debug) :
+CPOCSAGNetwork::CPOCSAGNetwork(const std::string& localAddress, unsigned short localPort, const std::string& remoteAddress, unsigned short remotePort, bool debug) :
 m_socket(localAddress, localPort),
 m_addr(),
 m_addrLen(0U),
