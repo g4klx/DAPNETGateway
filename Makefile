@@ -1,10 +1,11 @@
 CC      = cc
 CXX     = c++
-CFLAGS  = -g -O3 -Wall -DHAVE_LOG_H -std=c++0x -pthread
-LIBS    = -lm -lpthread
+CFLAGS  = -g -O3 -Wall -std=c++0x -pthread
+LIBS    = -lm -lpthread -lmosquitto
 LDFLAGS = -g
 
-OBJECTS = Conf.o DAPNETGateway.o DAPNETNetwork.o Log.o POCSAGMessage.o POCSAGNetwork.o StopWatch.o TCPSocket.o Thread.o Timer.o UDPSocket.o Utils.o REGEX.o
+OBJECTS = Conf.o DAPNETGateway.o DAPNETNetwork.o Log.o MQTTConnection.o POCSAGMessage.o POCSAGNetwork.o REGEX.o StopWatch.o \
+	  TCPSocket.o Thread.o Timer.o UDPSocket.o Utils.o
 
 all:		DAPNETGateway
 

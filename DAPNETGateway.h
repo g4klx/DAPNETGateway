@@ -60,7 +60,6 @@ private:
 	unsigned int calculateCodewords(const CPOCSAGMessage* message) const;
 	void loadSchedule();
 	bool sendMessage(CPOCSAGMessage* message) const;
-
 };
 
 #endif

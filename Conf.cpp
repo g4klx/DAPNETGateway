@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2018,2020,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -27,10 +27,11 @@
 const int BUFFER_SIZE = 500;
 
 enum SECTION {
-  SECTION_NONE,
-  SECTION_GENERAL,
-  SECTION_LOG,
-  SECTION_DAPNET
+	SECTION_NONE,
+	SECTION_GENERAL,
+	SECTION_LOG,
+	SECTION_MQTT,
+	SECTION_DAPNET
 };
 
 CConf::CConf(const std::string& file) :
@@ -45,10 +46,11 @@ m_myAddress(),
 m_myPort(0U),
 m_daemon(false),
 m_logDisplayLevel(0U),
-m_logFileLevel(0U),
-m_logFilePath(),
-m_logFileRoot(),
-m_logFileRotate(true),
+m_logMQTTLevel(0U),
+m_mqttAddress("127.0.0.1"),
+m_mqttPort(1883U),
+m_mqttKeepalive(60U),
+m_mqttName("dapnet-gateway"),
 m_dapnetAddress(),
 m_dapnetPort(0U),
 m_dapnetAuthKey(),
@@ -80,6 +82,8 @@ bool CConf::read()
 				section = SECTION_GENERAL;
 			else if (::strncmp(buffer, "[Log]", 5U) == 0)
 				section = SECTION_LOG;
+			else if (::strncmp(buffer, "[MQTT]", 6U) == 0)
+				section = SECTION_MQTT;
 			else if (::strncmp(buffer, "[DAPNET]", 8U) == 0)
 				section = SECTION_DAPNET;
 			else
@@ -153,16 +157,19 @@ bool CConf::read()
 			else if (::strcmp(key, "Daemon") == 0)
 				m_daemon = ::atoi(value) == 1;
 		} else if (section == SECTION_LOG) {
-			if (::strcmp(key, "FilePath") == 0)
-				m_logFilePath = value;
-			else if (::strcmp(key, "FileRoot") == 0)
-				m_logFileRoot = value;
-			else if (::strcmp(key, "FileLevel") == 0)
-				m_logFileLevel = (unsigned int)::atoi(value);
+			if (::strcmp(key, "MQTTLevel") == 0)
+				m_logMQTTLevel = (unsigned int)::atoi(value);
 			else if (::strcmp(key, "DisplayLevel") == 0)
 				m_logDisplayLevel = (unsigned int)::atoi(value);
-			else if (::strcmp(key, "FileRotate") == 0)
-				m_logFileRotate = ::atoi(value) == 1;
+		} else if (section == SECTION_MQTT) {
+			if (::strcmp(key, "Address") == 0)
+				m_mqttAddress = value;
+			else if (::strcmp(key, "Port") == 0)
+				m_mqttPort = (unsigned short)::atoi(value);
+			else if (::strcmp(key, "Keepalive") == 0)
+				m_mqttKeepalive = (unsigned int)::atoi(value);
+			else if (::strcmp(key, "Name") == 0)
+				m_mqttName = value;
 		} else if (section == SECTION_DAPNET) {
 			if (::strcmp(key, "Address") == 0)
 				m_dapnetAddress = value;
@@ -239,24 +246,29 @@ unsigned int CConf::getLogDisplayLevel() const
 	return m_logDisplayLevel;
 }
 
-unsigned int CConf::getLogFileLevel() const
+unsigned int CConf::getLogMQTTLevel() const
 {
-	return m_logFileLevel;
+	return m_logMQTTLevel;
 }
 
-std::string CConf::getLogFilePath() const
+std::string CConf::getMQTTAddress() const
 {
-	return m_logFilePath;
+	return m_mqttAddress;
 }
 
-std::string CConf::getLogFileRoot() const
+unsigned short CConf::getMQTTPort() const
 {
-	return m_logFileRoot;
+	return m_mqttPort;
 }
 
-bool CConf::getLogFileRotate() const
+unsigned int CConf::getMQTTKeepalive() const
 {
-	return m_logFileRotate;
+	return m_mqttKeepalive;
+}
+
+std::string CConf::getMQTTName() const
+{
+	return m_mqttName;
 }
 
 std::string CConf::getDAPNETAddress() const

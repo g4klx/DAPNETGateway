@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2018,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,61 +25,66 @@
 class CConf
 {
 public:
-  CConf(const std::string& file);
-  ~CConf();
+	CConf(const std::string& file);
+	~CConf();
 
-  bool read();
+	bool read();
 
-  // The General section
-  std::string  getCallsign() const;
-  std::vector<unsigned int> getWhiteList() const;
-  std::vector<unsigned int> getBlackList() const;
-  std::string  getblacklistRegexfile() const;
-  std::string  getwhitelistRegexfile() const;
-  std::string  getRptAddress() const;
-  unsigned short getRptPort() const;
-  std::string  getMyAddress() const;
-  unsigned short getMyPort() const;
-  bool         getDaemon() const;
+	// The General section
+	std::string  getCallsign() const;
+	std::vector<unsigned int> getWhiteList() const;
+	std::vector<unsigned int> getBlackList() const;
+	std::string  getblacklistRegexfile() const;
+	std::string  getwhitelistRegexfile() const;
+	std::string  getRptAddress() const;
+	unsigned short getRptPort() const;
+	std::string  getMyAddress() const;
+	unsigned short getMyPort() const;
+	bool         getDaemon() const;
 
-  // The Log section
-  unsigned int getLogDisplayLevel() const;
-  unsigned int getLogFileLevel() const;
-  std::string  getLogFilePath() const;
-  std::string  getLogFileRoot() const;
-  bool         getLogFileRotate() const;
+	// The Log section
+	unsigned int getLogDisplayLevel() const;
+	unsigned int getLogMQTTLevel() const;
 
-  // The DAPNET section
-  std::string  getDAPNETAddress() const;
-  unsigned short getDAPNETPort() const;
-  std::string  getDAPNETAuthKey() const;
-  bool         getDAPNETDebug() const;
+	// The MQTT section
+	std::string    getMQTTAddress() const;
+	unsigned short getMQTTPort() const;
+	unsigned int   getMQTTKeepalive() const;
+	std::string    getMQTTName() const;
+
+	// The DAPNET section
+	std::string  getDAPNETAddress() const;
+	unsigned short getDAPNETPort() const;
+	std::string  getDAPNETAuthKey() const;
+	bool         getDAPNETDebug() const;
 
 private:
-  std::string  m_file;
+	std::string  m_file;
 
-  std::string  m_callsign;
-  std::vector<unsigned int> m_whiteList;
-  std::vector<unsigned int> m_blackList;
+	std::string  m_callsign;
+	std::vector<unsigned int> m_whiteList;
+	std::vector<unsigned int> m_blackList;
 
-  std::string  m_blacklistRegexfile;
-  std::string  m_whitelistRegexfile;
-  std::string  m_rptAddress;
-  unsigned short m_rptPort;
-  std::string  m_myAddress;
-  unsigned short m_myPort;
-  bool         m_daemon;
+	std::string  m_blacklistRegexfile;
+	std::string  m_whitelistRegexfile;
+	std::string  m_rptAddress;
+	unsigned short m_rptPort;
+	std::string  m_myAddress;
+	unsigned short m_myPort;
+	bool         m_daemon;
 
-  unsigned int m_logDisplayLevel;
-  unsigned int m_logFileLevel;
-  std::string  m_logFilePath;
-  std::string  m_logFileRoot;
-  bool         m_logFileRotate;
+	unsigned int m_logDisplayLevel;
+	unsigned int m_logMQTTLevel;
 
-  std::string  m_dapnetAddress;
-  unsigned short m_dapnetPort;
-  std::string  m_dapnetAuthKey;
-  bool         m_dapnetDebug;
+	std::string    m_mqttAddress;
+	unsigned short m_mqttPort;
+	unsigned int   m_mqttKeepalive;
+	std::string    m_mqttName;
+
+	std::string  m_dapnetAddress;
+	unsigned short m_dapnetPort;
+	std::string  m_dapnetAuthKey;
+	bool         m_dapnetDebug;
 };
 
 #endif
