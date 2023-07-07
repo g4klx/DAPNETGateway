@@ -24,6 +24,8 @@
 #include "Timer.h"
 #include "Log.h"
 #include "REGEX.h"
+#include "GitVersion.h"
+
 #include <regex>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -77,6 +79,17 @@ const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
 
 const unsigned int MAX_TIME_TO_HOLD_TIME_MESSAGES = 15000U;		// 15s
 
+static bool m_killed = false;
+static int  m_signal = 0;
+
+#if !defined(_WIN32) && !defined(_WIN64)
+static void sigHandler(int signum)
+{
+	m_killed = true;
+	m_signal = signum;
+}
+#endif
+
 int main(int argc, char** argv)
 {
 	const char* iniFile = DEFAULT_INI_FILE;
@@ -84,7 +97,7 @@ int main(int argc, char** argv)
 		for (int currentArg = 1; currentArg < argc; ++currentArg) {
 			std::string arg = argv[currentArg];
 			if ((arg == "-v") || (arg == "--version")) {
-				::fprintf(stdout, "DAPNETGateway version %s\n", VERSION);
+				::fprintf(stdout, "DAPNETGateway version %s git #%.7s\n", VERSION, gitversion);
 				return 0;
 			} else if (arg.substr(0, 1) == "-") {
 				::fprintf(stderr, "Usage: DAPNETGateway [-v|--version] [filename]\n");
@@ -95,11 +108,33 @@ int main(int argc, char** argv)
 		}
 	}
 
-	CDAPNETGateway* gateway = new CDAPNETGateway(std::string(iniFile));
+#if !defined(_WIN32) && !defined(_WIN64)
+	::signal(SIGINT,  sigHandler);
+	::signal(SIGTERM, sigHandler);
+	::signal(SIGHUP,  sigHandler);
+#endif
 
-	int ret = gateway->run();
+	int ret = 0;
 
-	delete gateway;
+	do {
+		m_signal = 0;
+
+		CDAPNETGateway* gateway = new CDAPNETGateway(std::string(iniFile));
+		ret = gateway->run();
+		delete gateway;
+
+		if (m_signal == 2)
+			::LogInfo("DAPNETGateway-%s exited on receipt of SIGINT", VERSION);
+
+		if (m_signal == 15)
+			::LogInfo("DAPNETGateway-%s exited on receipt of SIGTERM", VERSION);
+
+		if (m_signal == 1)
+			::LogInfo("DAPNETGateway-%s restarted on receipt of SIGHUP", VERSION);
+
+	} while (m_signal == 1);
+
+	::LogFinalise();
 
 	return ret;
 }
@@ -255,8 +290,6 @@ int CDAPNETGateway::run()
 		return 1;
 	}
 
-	LogMessage("Starting DAPNETGateway-%s", VERSION);
-
 	ret = m_dapnetNetwork->login();
 	if (!ret) {
 		m_pocsagNetwork->close();
@@ -286,6 +319,8 @@ int CDAPNETGateway::run()
 		if (m_regexWhitelist->load())
 		regexWhitelist = m_regexWhitelist->get();
 
+	LogMessage("DAPNETGateway-%s is starting", VERSION);
+	LogMessage("Built %s %s (GitID #%.7s)", __TIME__, __DATE__, gitversion);
 
 	for (;;) {
 		unsigned char buffer[200U];

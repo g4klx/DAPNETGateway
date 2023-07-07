@@ -2,6 +2,7 @@ Debug
 Release
 x64
 DAPNETGateway
+GitVersion.h
 *.o
 *.opendb
 *.bak
