@@ -22,8 +22,9 @@
 #include "Version.h"
 #include "Thread.h"
 #include "Timer.h"
-#include "Log.h"
 #include "REGEX.h"
+#include "Utils.h"
+#include "Log.h"
 #include "GitVersion.h"
 
 #include <regex>
@@ -260,8 +261,6 @@ int CDAPNETGateway::run()
 	ret = m_pocsagNetwork->open();
 	if (!ret) {
 		::LogError("Cannot open the repeater network port");
-		::LogFinalise();
-
 		return 1;
 	}
 
@@ -272,8 +271,6 @@ int CDAPNETGateway::run()
 
 	if (dapnetAuthKey.length() == 0 || dapnetAuthKey == "TOPSECRET") {
 		::LogError("AuthKey not set or invalid");
-		::LogFinalise();
-		
 		return 1;
 	}
 		
@@ -283,10 +280,7 @@ int CDAPNETGateway::run()
 		m_pocsagNetwork->close();
 		delete m_pocsagNetwork;
 		delete m_dapnetNetwork;
-
 		::LogError("Cannot open the DAPNET network port");
-		::LogFinalise();
-
 		return 1;
 	}
 
@@ -296,10 +290,7 @@ int CDAPNETGateway::run()
 		m_dapnetNetwork->close();
 		delete m_pocsagNetwork;
 		delete m_dapnetNetwork;
-
 		::LogError("Cannot login to the DAPNET network");
-		::LogFinalise();
-
 		return 1;
 	}
 
@@ -319,8 +310,10 @@ int CDAPNETGateway::run()
 		if (m_regexWhitelist->load())
 		regexWhitelist = m_regexWhitelist->get();
 
-	LogMessage("DAPNETGateway-%s is starting", VERSION);
-	LogMessage("Built %s %s (GitID #%.7s)", __TIME__, __DATE__, gitversion);
+	LogInfo("DAPNETGateway-%s is starting", VERSION);
+	LogInfo("Built %s %s (GitID #%.7s)", __TIME__, __DATE__, gitversion);
+
+	writeJSONStatus("DAPNETGateway is starting");
 
 	for (;;) {
 		unsigned char buffer[200U];
@@ -431,13 +424,14 @@ int CDAPNETGateway::run()
 		CThread::sleep(10U);
 	}
 
+	LogInfo("DAPNETGateway is stopping");
+	writeJSONStatus("DAPNETGateway is stopping");
+
 	m_pocsagNetwork->close();
 	delete m_pocsagNetwork;
 
 	m_dapnetNetwork->close();
 	delete m_dapnetNetwork;
-
-	::LogFinalise();
 
 	return 0;
 }
@@ -624,3 +618,14 @@ bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 		return true;
 	}
 }
+
+void CDAPNETGateway::writeJSONStatus(const std::string& status)
+{
+	nlohmann::json json;
+
+	json["timestamp"] = CUtils::createTimestamp();
+	json["message"]   = status;
+
+	WriteJSON("status", json);
+}
+
