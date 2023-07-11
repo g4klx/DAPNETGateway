@@ -118,6 +118,7 @@ int main(int argc, char** argv)
 	int ret = 0;
 
 	do {
+		m_killed = false;
 		m_signal = 0;
 
 		CDAPNETGateway* gateway = new CDAPNETGateway(std::string(iniFile));
@@ -315,7 +316,7 @@ int CDAPNETGateway::run()
 
 	writeJSONStatus("DAPNETGateway is starting");
 
-	for (;;) {
+	while (!m_killed) {
 		unsigned char buffer[200U];
 
 		if (m_pocsagNetwork->read(buffer) > 0U) {
