@@ -15,3 +15,5 @@ GitVersion.h
 *.user
 *.VC.db
 .vs
+GitVersion.h
+
