@@ -22,6 +22,8 @@
 #include "Thread.h"
 #include "Timer.h"
 #include "Log.h"
+#include "GitVersion.h"
+
 #include "REGEX.h"
 #include <regex>
 
@@ -80,7 +82,7 @@ int main(int argc, char** argv)
 		for (int currentArg = 1; currentArg < argc; ++currentArg) {
 			std::string arg = argv[currentArg];
 			if ((arg == "-v") || (arg == "--version")) {
-				::fprintf(stdout, "DAPNETGateway version %s\n", VERSION);
+				::fprintf(stdout, "DAPNETGateway version %s git #%.7s\n", VERSION, gitversion);
 				return 0;
 			} else if (arg.substr(0, 1) == "-") {
 				::fprintf(stderr, "Usage: DAPNETGateway [-v|--version] [filename]\n");
