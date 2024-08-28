@@ -9,7 +9,7 @@ OBJECTS = Conf.o DAPNETGateway.o DAPNETNetwork.o Log.o MQTTConnection.o POCSAGMe
 
 all:		DAPNETGateway
 
-DAPNETGateway:	$(OBJECTS)
+DAPNETGateway:	GitVersion.h $(OBJECTS)
 		$(CXX) $(OBJECTS) $(CFLAGS) $(LIBS) -o DAPNETGateway
 
 %.o: %.cpp

@@ -1,5 +1,5 @@
 /*
-*   Copyright (C) 2018,2020,2023 by Jonathan Naylor G4KLX
+*   Copyright (C) 2018,2020,2023,2024 by Jonathan Naylor G4KLX
 *
 *   This program is free software; you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include "Version.h"
 #include "Thread.h"
 #include "Timer.h"
+
 #include "REGEX.h"
 #include "Utils.h"
 #include "Log.h"
@@ -47,6 +48,17 @@ const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 
 // In Log.cpp
 extern CMQTTConnection* m_mqtt;
+
+static bool m_killed = false;
+static int  m_signal = 0;
+
+#if !defined(_WIN32) && !defined(_WIN64)
+static void sigHandler(int signum)
+{
+	m_killed = true;
+	m_signal = signum;
+}
+#endif
 
 #include <algorithm>
 #include <utility>
@@ -80,16 +92,6 @@ const unsigned char FUNCTIONAL_ALPHANUMERIC = 3U;
 
 const unsigned int MAX_TIME_TO_HOLD_TIME_MESSAGES = 15000U;		// 15s
 
-static bool m_killed = false;
-static int  m_signal = 0;
-
-#if !defined(_WIN32) && !defined(_WIN64)
-static void sigHandler(int signum)
-{
-	m_killed = true;
-	m_signal = signum;
-}
-#endif
 
 int main(int argc, char** argv)
 {
@@ -118,22 +120,28 @@ int main(int argc, char** argv)
 	int ret = 0;
 
 	do {
-		m_killed = false;
 		m_signal = 0;
+		m_killed = false;
 
 		CDAPNETGateway* gateway = new CDAPNETGateway(std::string(iniFile));
 		ret = gateway->run();
+
 		delete gateway;
 
-		if (m_signal == 2)
-			::LogInfo("DAPNETGateway-%s exited on receipt of SIGINT", VERSION);
-
-		if (m_signal == 15)
-			::LogInfo("DAPNETGateway-%s exited on receipt of SIGTERM", VERSION);
-
-		if (m_signal == 1)
-			::LogInfo("DAPNETGateway-%s restarted on receipt of SIGHUP", VERSION);
-
+		switch (m_signal) {
+			case 2:
+				::LogInfo("DAPNETGateway-%s exited on receipt of SIGINT", VERSION);
+				break;
+			case 15:
+				::LogInfo("DAPNETGateway-%s exited on receipt of SIGTERM", VERSION);
+				break;
+			case 1:
+				::LogInfo("DAPNETGateway-%s is restarting on receipt of SIGHUP", VERSION);
+				break;
+			default:
+				::LogInfo("DAPNETGateway-%s exited on receipt of an unknown signal", VERSION);
+				break;
+		}
 	} while (m_signal == 1);
 
 	::LogFinalise();
@@ -185,7 +193,7 @@ int CDAPNETGateway::run()
 		pid_t pid = ::fork();
 		if (pid == -1) {
 			::fprintf(stderr, "Couldn't fork() , exiting\n");
-			return -1;
+			return 1;
 		} else if (pid != 0) {
 			exit(EXIT_SUCCESS);
 		}
@@ -193,13 +201,13 @@ int CDAPNETGateway::run()
 		// Create new session and process group
 		if (::setsid() == -1) {
 			::fprintf(stderr, "Couldn't setsid(), exiting\n");
-			return -1;
+			return 1;
 		}
 
 		// Set the working directory to the root directory
 		if (::chdir("/") == -1) {
 			::fprintf(stderr, "Couldn't cd /, exiting\n");
-			return -1;
+			return 1;
 		}
 
 		// If we are currently root...
@@ -207,7 +215,7 @@ int CDAPNETGateway::run()
 			struct passwd* user = ::getpwnam("mmdvm");
 			if (user == NULL) {
 				::fprintf(stderr, "Could not get the mmdvm user, exiting\n");
-				return -1;
+				return 1;
 			}
 
 			uid_t mmdvm_uid = user->pw_uid;
@@ -216,18 +224,18 @@ int CDAPNETGateway::run()
 			// Set user and group ID's to mmdvm:mmdvm
 			if (setgid(mmdvm_gid) != 0) {
 				::fprintf(stderr, "Could not set mmdvm GID, exiting\n");
-				return -1;
+				return 1;
 			}
 
 			if (setuid(mmdvm_uid) != 0) {
 				::fprintf(stderr, "Could not set mmdvm UID, exiting\n");
-				return -1;
+				return 1;
 			}
 
 			// Double check it worked (AKA Paranoia) 
 			if (setuid(0) != -1) {
 				::fprintf(stderr, "It's possible to regain root - something is wrong!, exiting\n");
-				return -1;
+				return 1;
 			}
 		}
 	}
@@ -279,9 +287,12 @@ int CDAPNETGateway::run()
 	ret = m_dapnetNetwork->open();
 	if (!ret) {
 		m_pocsagNetwork->close();
+
 		delete m_pocsagNetwork;
 		delete m_dapnetNetwork;
+
 		::LogError("Cannot open the DAPNET network port");
+
 		return 1;
 	}
 
@@ -289,9 +300,12 @@ int CDAPNETGateway::run()
 	if (!ret) {
 		m_pocsagNetwork->close();
 		m_dapnetNetwork->close();
+
 		delete m_pocsagNetwork;
 		delete m_dapnetNetwork;
+
 		::LogError("Cannot login to the DAPNET network");
+
 		return 1;
 	}
 
