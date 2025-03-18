@@ -1,5 +1,5 @@
 /*
-*   Copyright (C) 2016,2017 by Jonathan Naylor G4KLX
+*   Copyright (C) 2016,2017,2025 by Jonathan Naylor G4KLX
 *
 *   Contributed by Simon G7RZU
 *
@@ -46,16 +46,16 @@ bool CREGEX::load()
 
 	
 	FILE* fp = ::fopen(m_regexFile.c_str(), "rt");
-	if (fp != NULL) {
+	if (fp != nullptr) {
 		char buffer[100U];
 		std::regex regex;
-		while (::fgets(buffer, 100U, fp) != NULL) {
+		while (::fgets(buffer, 100U, fp) != nullptr) {
 			if (buffer[0U] == '#')
 				continue;
 
 			const char* regexStr = ::strtok(buffer, "\r\n");
 			
-			if (regexStr != NULL) {
+			if (regexStr != nullptr) {
 				try {
 					regex = std::regex(regexStr);
 				}

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2010-2013,2016,2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2010-2013,2016,2018,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,7 +33,11 @@ typedef int ssize_t;
 CTCPSocket::CTCPSocket(const std::string& address, unsigned int port) :
 m_address(address),
 m_port(port),
+#if defined(_WIN32) || defined(_WIN64)
+m_fd(INVALID_SOCKET)
+#else
 m_fd(-1)
+#endif
 {
 	assert(!address.empty());
 	assert(port > 0U);
@@ -55,8 +59,13 @@ CTCPSocket::~CTCPSocket()
 
 bool CTCPSocket::open()
 {
+#if defined(_WIN32) || defined(_WIN64)
+	if (m_fd != INVALID_SOCKET)
+		return true;
+#else
 	if (m_fd != -1)
 		return true;
+#endif
 
 	if (m_address.empty() || m_port == 0U)
 		return false;
@@ -114,9 +123,13 @@ bool CTCPSocket::open()
 
 int CTCPSocket::read(unsigned char* buffer, unsigned int length, unsigned int secs, unsigned int msecs)
 {
-	assert(buffer != NULL);
+	assert(buffer != nullptr);
 	assert(length > 0U);
+#if defined(_WIN32) || defined(_WIN64)
+	assert(m_fd != INVALID_SOCKET);
+#else
 	assert(m_fd != -1);
+#endif
 
 	// Check that the recv() won't block
 	fd_set readFds;
@@ -132,7 +145,7 @@ int CTCPSocket::read(unsigned char* buffer, unsigned int length, unsigned int se
 	tv.tv_sec  = secs;
 	tv.tv_usec = msecs * 1000;
 
-	int ret = ::select(m_fd + 1, &readFds, NULL, NULL, &tv);
+	int ret = ::select(m_fd + 1, &readFds, nullptr, nullptr, &tv);
 	if (ret < 0) {
 #if defined(_WIN32) || defined(_WIN64)
 		LogError("Error returned from TCP client select, err=%d", ::GetLastError());
@@ -191,9 +204,13 @@ int CTCPSocket::readLine(std::string& line, unsigned int secs)
 
 bool CTCPSocket::write(const unsigned char* buffer, unsigned int length)
 {
-	assert(buffer != NULL);
+	assert(buffer != nullptr);
 	assert(length > 0U);
+#if defined(_WIN32) || defined(_WIN64)
+	assert(m_fd != INVALID_SOCKET);
+#else
 	assert(m_fd != -1);
+#endif
 
 	ssize_t ret = ::send(m_fd, (char *)buffer, length, 0);
 	if (ret != ssize_t(length)) {
@@ -227,12 +244,15 @@ bool CTCPSocket::writeLine(const std::string& line)
 
 void CTCPSocket::close()
 {
-	if (m_fd != -1) {
 #if defined(_WIN32) || defined(_WIN64)
+	if (m_fd != INVALID_SOCKET) {
 		::closesocket(m_fd);
+		m_fd = INVALID_SOCKET;
+	}
 #else
+	if (m_fd != -1) {
 		::close(m_fd);
-#endif
 		m_fd = -1;
 	}
+#endif
 }

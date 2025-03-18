@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2018,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ bool CPOCSAGNetwork::open()
 
 bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
 {
-	assert(message != NULL);
+	assert(message != nullptr);
 
 	unsigned char data[200U];
 	data[0U] = 'P';
@@ -82,7 +82,7 @@ bool CPOCSAGNetwork::write(CPOCSAGMessage* message)
 
 unsigned int CPOCSAGNetwork::read(unsigned char* data)
 {
-	assert(data != NULL);
+	assert(data != nullptr);
 
 	sockaddr_storage address;
 	unsigned int addrLen;

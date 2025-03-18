@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2018,2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2018,2020,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@
 
 const int BUFFER_SIZE = 500;
 
-enum SECTION {
-  SECTION_NONE,
-  SECTION_GENERAL,
-  SECTION_LOG,
-  SECTION_DAPNET
+enum class SECTION {
+	NONE,
+	GENERAL,
+	LOG,
+	DAPNET
 };
 
 CConf::CConf(const std::string& file) :
@@ -63,37 +63,37 @@ CConf::~CConf()
 bool CConf::read()
 {
 	FILE* fp = ::fopen(m_file.c_str(), "rt");
-	if (fp == NULL) {
+	if (fp == nullptr) {
 		::fprintf(stderr, "Couldn't open the .ini file - %s\n", m_file.c_str());
 		return false;
 	}
 
-	SECTION section = SECTION_NONE;
+	SECTION section = SECTION::NONE;
 
 	char buffer[BUFFER_SIZE];
-	while (::fgets(buffer, BUFFER_SIZE, fp) != NULL) {
+	while (::fgets(buffer, BUFFER_SIZE, fp) != nullptr) {
 		if (buffer[0U] == '#')
 			continue;
 
 		if (buffer[0U] == '[') {
 			if (::strncmp(buffer, "[General]", 9U) == 0)
-				section = SECTION_GENERAL;
+				section = SECTION::GENERAL;
 			else if (::strncmp(buffer, "[Log]", 5U) == 0)
-				section = SECTION_LOG;
+				section = SECTION::LOG;
 			else if (::strncmp(buffer, "[DAPNET]", 8U) == 0)
-				section = SECTION_DAPNET;
+				section = SECTION::DAPNET;
 			else
-				section = SECTION_NONE;
+				section = SECTION::NONE;
 
 			continue;
 		}
 
 		char* key = ::strtok(buffer, " \t=\r\n");
-		if (key == NULL)
+		if (key == nullptr)
 			  continue;
 
-		char* value = ::strtok(NULL, "\r\n");
-		if (value == NULL)
+		char* value = ::strtok(nullptr, "\r\n");
+		if (value == nullptr)
 			  continue;
 
 		// Remove quotes from the value
@@ -105,7 +105,7 @@ bool CConf::read()
 			char *p;
 
 			// if value is not quoted, remove after # (to make comment)
-			if ((p = strchr(value, '#')) != NULL)
+			if ((p = strchr(value, '#')) != nullptr)
 				*p = '\0';
 
 			// remove trailing tab/space
@@ -113,32 +113,29 @@ bool CConf::read()
 				*p = '\0';
 		}
 
-		if (section == SECTION_GENERAL) {
+		if (section == SECTION::GENERAL) {
 			if (::strcmp(key, "Callsign") == 0) {
 				for (unsigned int i = 0U; value[i] != '\0'; i++) {
 					if (!::isspace(value[i]))
 						m_callsign.insert(m_callsign.end(), 1, value[i]);
 				}
-			}
-			else if (::strcmp(key, "WhiteList") == 0) {
+			} else if (::strcmp(key, "WhiteList") == 0) {
 				char* p = ::strtok(value, ",\r\n");
-				while (p != NULL) {
+				while (p != nullptr) {
 					unsigned int ric = (unsigned int)::atoi(p);
 					if (ric > 0U)
 						m_whiteList.push_back(ric);
-					p = ::strtok(NULL, ",\r\n");
+					p = ::strtok(nullptr, ",\r\n");
 				}
-			}
-			else if (::strcmp(key, "BlackList") == 0) {
+			} else if (::strcmp(key, "BlackList") == 0) {
 				char* p = ::strtok(value, ",\r\n");
-				while (p != NULL) {
+				while (p != nullptr) {
 					unsigned int ric = (unsigned int)::atoi(p);
 					if (ric > 0U)
 						m_blackList.push_back(ric);
-					p = ::strtok(NULL, ",\r\n");
+					p = ::strtok(nullptr, ",\r\n");
 				}
-			}
-			else if (::strcmp(key,"BlacklistRegexfile") == 0)
+			} else if (::strcmp(key,"BlacklistRegexfile") == 0)
 				m_blacklistRegexfile = value;
 			else if (::strcmp(key,"WhitelistRegexfile") == 0)
 				m_whitelistRegexfile = value;
@@ -152,7 +149,7 @@ bool CConf::read()
 				m_myPort = (unsigned short)::atoi(value);
 			else if (::strcmp(key, "Daemon") == 0)
 				m_daemon = ::atoi(value) == 1;
-		} else if (section == SECTION_LOG) {
+		} else if (section == SECTION::LOG) {
 			if (::strcmp(key, "FilePath") == 0)
 				m_logFilePath = value;
 			else if (::strcmp(key, "FileRoot") == 0)
@@ -163,7 +160,7 @@ bool CConf::read()
 				m_logDisplayLevel = (unsigned int)::atoi(value);
 			else if (::strcmp(key, "FileRotate") == 0)
 				m_logFileRotate = ::atoi(value) == 1;
-		} else if (section == SECTION_DAPNET) {
+		} else if (section == SECTION::DAPNET) {
 			if (::strcmp(key, "Address") == 0)
 				m_dapnetAddress = value;
 			else if (::strcmp(key, "Port") == 0)
@@ -173,8 +170,7 @@ bool CConf::read()
 					if (!::isspace(value[i]))
 						m_dapnetAuthKey.insert(m_dapnetAuthKey.end(), 1, value[i]);
 				}
-			}
-			else if (::strcmp(key, "Debug") == 0)
+			} else if (::strcmp(key, "Debug") == 0)
 				m_dapnetDebug = ::atoi(value) == 1;
 		}
 	}

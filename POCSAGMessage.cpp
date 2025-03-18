@@ -1,5 +1,5 @@
 /*
-*   Copyright (C) 2018 by Jonathan Naylor G4KLX
+*   Copyright (C) 2018,2025 by Jonathan Naylor G4KLX
 *
 *   This program is free software; you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -26,12 +26,12 @@ CPOCSAGMessage::CPOCSAGMessage(unsigned char type, unsigned int ric, unsigned ch
 m_type(type),
 m_ric(ric),
 m_functional(functional),
-m_message(NULL),
+m_message(nullptr),
 m_length(length),
 m_timeQueued()
 {
 	assert(functional < 4U);
-	assert(message != NULL);
+	assert(message != nullptr);
 	assert(length > 0U);
 
 	m_message = new unsigned char[length + 1];
