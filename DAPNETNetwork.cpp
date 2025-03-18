@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2018 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2018,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@
 #include <cassert>
 #include <cstring>
 
+const unsigned int BACKOFF[] = { 2000U, 4000U, 8000U, 10000U, 20000U, 60000U, 120000U, 240000U, 480000U, 600000U };
+
 const unsigned int BUFFER_LENGTH = 200U;
 
 CDAPNETNetwork::CDAPNETNetwork(const std::string& address, unsigned short port, const std::string& callsign, const std::string& authKey, const char* version, bool loggedIn, int failCount, bool debug) :
@@ -37,12 +39,12 @@ m_version(version),
 m_loggedIn(false),
 m_failCount(failCount),
 m_debug(debug),
-m_message(NULL),
-m_schedule(NULL)
+m_message(nullptr),
+m_schedule(nullptr)
 {
 	assert(!callsign.empty());
 	assert(!authKey.empty());
-	assert(version != NULL);
+	assert(version != nullptr);
 }
 
 CDAPNETNetwork::~CDAPNETNetwork()
@@ -101,7 +103,7 @@ bool CDAPNETNetwork::read()
 		}
 		// Time synchronisation
 		char* p = ::strchr((char*)buffer, '\n');
-		if (p != NULL)
+		if (p != nullptr)
 			::strcpy(p, ":0000\r\n");
 		else
 			::strcat((char*)buffer, ":0000\r\n");
@@ -135,19 +137,19 @@ bool* CDAPNETNetwork::readSchedule()
 {
 	bool* schedule = m_schedule;
 
-	m_schedule = NULL;
+	m_schedule = nullptr;
 
 	return schedule;
 }
 
 CPOCSAGMessage* CDAPNETNetwork::readMessage()
 {
-	if (m_message == NULL)
-		return NULL;
+	if (m_message == nullptr)
+		return nullptr;
 
 	CPOCSAGMessage* message = m_message;
 
-	m_message = NULL;
+	m_message = nullptr;
 
 	return message;
 }
@@ -161,9 +163,9 @@ void CDAPNETNetwork::close()
 
 bool CDAPNETNetwork::write(unsigned char* data)
 {
-	assert(data != NULL);
+	assert(data != nullptr);
 
-	unsigned int length = ::strlen((char*)data);
+	unsigned int length = (unsigned int)::strlen((char*)data);
 
 	if (m_debug)
 		CUtils::dump(1U, "DAPNET Data Transmitted", data, length);
@@ -177,17 +179,17 @@ bool CDAPNETNetwork::write(unsigned char* data)
 
 bool CDAPNETNetwork::parseMessage(unsigned char* buffer, unsigned int length)
 {
-	assert(buffer != NULL);
+	assert(buffer != nullptr);
 
-	unsigned int id = ::strtoul((char*)buffer + 1U, NULL, 16);
+	unsigned int id = ::strtoul((char*)buffer + 1U, nullptr, 16);
 
 	char* p1 = ::strtok((char*)buffer + 4U, ":\r\n");
-	char* p2 = ::strtok(NULL, ":\r\n");
-	char* p3 = ::strtok(NULL, ":\r\n");
-	char* p4 = ::strtok(NULL, ":\r\n");
-	char* p5 = ::strtok(NULL, "\r\n");
+	char* p2 = ::strtok(nullptr, ":\r\n");
+	char* p3 = ::strtok(nullptr, ":\r\n");
+	char* p4 = ::strtok(nullptr, ":\r\n");
+	char* p5 = ::strtok(nullptr, "\r\n");
 
-	if (p1 == NULL || p2 == NULL || p3 == NULL || p4 == NULL || p5 == NULL) {
+	if (p1 == nullptr || p2 == nullptr || p3 == nullptr || p4 == nullptr || p5 == nullptr) {
 		CUtils::dump(3U, "Received a malformed message from DAPNET", buffer, length);
 
 		id = (id + 1U) % 256UL;
@@ -196,11 +198,11 @@ bool CDAPNETNetwork::parseMessage(unsigned char* buffer, unsigned int length)
 		::snprintf(reply, 20U, "#%02X -\r\n", id);
 		return write((unsigned char*)reply);
 	} else {
-		unsigned int type = ::strtoul(p1, NULL, 10);
-		unsigned int addr = ::strtoul(p3, NULL, 16);
-		unsigned int func = ::strtoul(p4, NULL, 10);
+		unsigned int type = ::strtoul(p1, nullptr, 10);
+		unsigned int addr = ::strtoul(p3, nullptr, 16);
+		unsigned int func = ::strtoul(p4, nullptr, 10);
 
-		m_message = new CPOCSAGMessage(type, addr, func, (unsigned char*)p5, ::strlen(p5));
+		m_message = new CPOCSAGMessage(type, addr, func, (unsigned char*)p5, (unsigned int)::strlen(p5));
 
 		id = (id + 1U) % 256UL;
 
@@ -212,10 +214,10 @@ bool CDAPNETNetwork::parseMessage(unsigned char* buffer, unsigned int length)
 
 bool CDAPNETNetwork::parseSchedule(unsigned char* data)
 {
-	assert(data != NULL);
+	assert(data != nullptr);
 
 	char* p = ::strtok((char*)data + 2U, "\r\n");
-	assert(p != NULL);
+	assert(p != nullptr);
 
 	LogMessage("Schedule information received: %s", p);
 
@@ -225,37 +227,37 @@ bool CDAPNETNetwork::parseSchedule(unsigned char* data)
 	for (unsigned int i = 0U; i < 16U; i++)
 		m_schedule[i] = false;
 
-	if (::strchr(p, '0') != NULL)
+	if (::strchr(p, '0') != nullptr)
 		m_schedule[0U] = true;
-	if (::strchr(p, '1') != NULL)
+	if (::strchr(p, '1') != nullptr)
 		m_schedule[1U] = true;
-	if (::strchr(p, '2') != NULL)
+	if (::strchr(p, '2') != nullptr)
 		m_schedule[2U] = true;
-	if (::strchr(p, '3') != NULL)
+	if (::strchr(p, '3') != nullptr)
 		m_schedule[3U] = true;
-	if (::strchr(p, '4') != NULL)
+	if (::strchr(p, '4') != nullptr)
 		m_schedule[4U] = true;
-	if (::strchr(p, '5') != NULL)
+	if (::strchr(p, '5') != nullptr)
 		m_schedule[5U] = true;
-	if (::strchr(p, '6') != NULL)
+	if (::strchr(p, '6') != nullptr)
 		m_schedule[6U] = true;
-	if (::strchr(p, '7') != NULL)
+	if (::strchr(p, '7') != nullptr)
 		m_schedule[7U] = true;
-	if (::strchr(p, '8') != NULL)
+	if (::strchr(p, '8') != nullptr)
 		m_schedule[8U] = true;
-	if (::strchr(p, '9') != NULL)
+	if (::strchr(p, '9') != nullptr)
 		m_schedule[9U] = true;
-	if (::strchr(p, 'A') != NULL)
+	if (::strchr(p, 'A') != nullptr)
 		m_schedule[10U] = true;
-	if (::strchr(p, 'B') != NULL)
+	if (::strchr(p, 'B') != nullptr)
 		m_schedule[11U] = true;
-	if (::strchr(p, 'C') != NULL)
+	if (::strchr(p, 'C') != nullptr)
 		m_schedule[12U] = true;
-	if (::strchr(p, 'D') != NULL)
+	if (::strchr(p, 'D') != nullptr)
 		m_schedule[13U] = true;
-	if (::strchr(p, 'E') != NULL)
+	if (::strchr(p, 'E') != nullptr)
 		m_schedule[14U] = true;
-	if (::strchr(p, 'F') != NULL)
+	if (::strchr(p, 'F') != nullptr)
 		m_schedule[15U] = true;
 
 	return write((unsigned char*)"+\r\n");
@@ -263,16 +265,14 @@ bool CDAPNETNetwork::parseSchedule(unsigned char* data)
 
 bool CDAPNETNetwork::parseFailedLogin(unsigned char* data)
 {
-	assert(data != NULL);
+	assert(data != nullptr);
 
 	char* p = ::strtok((char*)data + 2U, "\r\n");
-	assert(p != NULL);
-
-	const unsigned int backoff[] = {2000u, 4000u, 8000u, 10000u, 20000u, 60000u, 120000u, 240000u, 480000u, 600000u};
+	assert(p != nullptr);
 
 	LogMessage("Login failed: %s", p);
 
-	CThread::sleep(backoff[m_failCount]);
+	CThread::sleep(BACKOFF[m_failCount]);
 	if (m_failCount < 9)
 		m_failCount++;
 

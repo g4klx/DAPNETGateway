@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2010,2011,2012,2013,2016 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2010,2011,2012,2013,2016,2025 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -53,7 +53,11 @@ public:
 private:
 	std::string    m_address;
 	unsigned short m_port;
+#if defined(_WIN32) || defined(_WIN64)
+	SOCKET         m_fd;
+#else
 	int            m_fd;
+#endif
 };
 
 #endif

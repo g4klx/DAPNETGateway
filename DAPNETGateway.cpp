@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
 *   Copyright (C) 2018,2020,2023,2024 by Jonathan Naylor G4KLX
+=======
+*   Copyright (C) 2018,2020,2024,2025 by Jonathan Naylor G4KLX
+>>>>>>> master
 *
 *   This program is free software; you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -153,11 +157,11 @@ int main(int argc, char** argv)
 
 CDAPNETGateway::CDAPNETGateway(const std::string& configFile) :
 m_conf(configFile),
-m_dapnetNetwork(NULL),
-m_pocsagNetwork(NULL),
+m_dapnetNetwork(nullptr),
+m_pocsagNetwork(nullptr),
 m_queue(),
 m_slotTimer(),
-m_schedule(NULL),
+m_schedule(nullptr),
 m_allSlots(false),
 m_currentSlot(0U),
 m_sentCodewords(0U),
@@ -215,7 +219,7 @@ int CDAPNETGateway::run()
 		// If we are currently root...
 		if (getuid() == 0) {
 			struct passwd* user = ::getpwnam("mmdvm");
-			if (user == NULL) {
+			if (user == nullptr) {
 				::fprintf(stderr, "Could not get the mmdvm user, exiting\n");
 				return 1;
 			}
@@ -362,7 +366,7 @@ int CDAPNETGateway::run()
 			recover();
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
-		if (message != NULL) {
+		if (message != nullptr) {
 			bool found = true;
 			bool blackListRIC = false;
 			bool blacklistRegexmatch = false;
@@ -430,7 +434,7 @@ int CDAPNETGateway::run()
 		if (slot != m_currentSlot) {
 			// LogDebug("Start of slot %u", slot);
 			m_currentSlot = slot;
-			if (m_schedule == NULL || m_currentSlot == 0U)
+			if (m_schedule == nullptr || m_currentSlot == 0U)
 				loadSchedule();
 			m_sentCodewords = 0U;
 			m_slotTimer.start();
@@ -460,7 +464,7 @@ void CDAPNETGateway::sendMessages()
 		return;
 
 	// Do we have a schedule?
-	if (m_schedule == NULL)
+	if (m_schedule == nullptr)
 		return;
 
 	// Check to see if we're allowed to send within a slot.
@@ -472,7 +476,7 @@ void CDAPNETGateway::sendMessages()
 		return;
 
 	CPOCSAGMessage* message = m_queue.back();
-	assert(message != NULL);
+	assert(message != nullptr);
 
 	// Special case, only test if slots are being used.
 	if (m_allSlots) {
@@ -536,7 +540,7 @@ bool CDAPNETGateway::isTimeMessage(const CPOCSAGMessage* message) const
 
 unsigned int CDAPNETGateway::calculateCodewords(const CPOCSAGMessage* message) const
 {
-	assert(message != NULL);
+	assert(message != nullptr);
 
 	unsigned int len = 0U;
 	switch (message->m_functional) {
@@ -565,7 +569,7 @@ unsigned int CDAPNETGateway::calculateCodewords(const CPOCSAGMessage* message) c
 void CDAPNETGateway::loadSchedule()
 {
 	bool* schedule = m_dapnetNetwork->readSchedule();
-	if (schedule == NULL)
+	if (schedule == nullptr)
 		return;
 
 	delete[] m_schedule;
@@ -591,7 +595,7 @@ void CDAPNETGateway::loadSchedule()
 
 bool CDAPNETGateway::sendMessage(CPOCSAGMessage* message) const
 {
-	assert(message != NULL);
+	assert(message != nullptr);
 
 	bool ret = isTimeMessage(message);
 	if (ret && message->m_timeQueued.elapsed() >= MAX_TIME_TO_HOLD_TIME_MESSAGES) {
