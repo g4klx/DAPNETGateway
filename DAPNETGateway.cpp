@@ -1,9 +1,5 @@
 /*
-<<<<<<< HEAD
-*   Copyright (C) 2018,2020,2023,2024 by Jonathan Naylor G4KLX
-=======
-*   Copyright (C) 2018,2020,2024,2025 by Jonathan Naylor G4KLX
->>>>>>> master
+*   Copyright (C) 2018,2020,2023,2024,2025 by Jonathan Naylor G4KLX
 *
 *   This program is free software; you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -258,7 +254,7 @@ int CDAPNETGateway::run()
 	::LogInitialise(m_conf.getLogDisplayLevel(), m_conf.getLogMQTTLevel());
 
 	std::vector<std::pair<std::string, void (*)(const unsigned char*, unsigned int)>> subscriptions;
-	m_mqtt = new CMQTTConnection(m_conf.getMQTTAddress(), m_conf.getMQTTPort(), m_conf.getMQTTName(), subscriptions, m_conf.getMQTTKeepalive());
+	m_mqtt = new CMQTTConnection(m_conf.getMQTTAddress(), m_conf.getMQTTPort(), m_conf.getMQTTName(), m_conf.getMQTTAuthEnabled(), m_conf.getMQTTUsername(), m_conf.getMQTTPassword(), subscriptions, m_conf.getMQTTKeepalive());
 	ret = m_mqtt->open();
 	if (!ret) {
 		delete m_mqtt;
