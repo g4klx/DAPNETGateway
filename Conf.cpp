@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#include <cstdint>
 
 const int BUFFER_SIZE = 500;
 
