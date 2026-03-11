@@ -4,6 +4,7 @@ x64
 DAPNETGateway
 GitVersion.h
 *.o
+*.d
 *.opendb
 *.bak
 *.obj

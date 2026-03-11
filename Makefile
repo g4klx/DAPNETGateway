@@ -1,19 +1,21 @@
 CC      = cc
 CXX     = c++
-CFLAGS  = -g -O3 -Wall -std=c++0x -pthread
+CFLAGS  = -g -O3 -Wall -std=c++0x -MMD -MD -pthread
 LIBS    = -lm -lpthread -lmosquitto
 LDFLAGS = -g
 
-OBJECTS = Conf.o DAPNETGateway.o DAPNETNetwork.o Log.o MQTTConnection.o POCSAGMessage.o POCSAGNetwork.o REGEX.o StopWatch.o \
-	  TCPSocket.o Thread.o Timer.o UDPSocket.o Utils.o
+SRCS = $(wildcard *.cpp)
+OBJS = $(SRCS:.cpp=.o)
+DEPS = $(SRCS:.cpp=.d)
 
 all:		DAPNETGateway
 
-DAPNETGateway:	GitVersion.h $(OBJECTS)
-		$(CXX) $(OBJECTS) $(CFLAGS) $(LIBS) -o DAPNETGateway
+DAPNETGateway:	GitVersion.h $(OBJS)
+		$(CXX) $(OBJS) $(CFLAGS) $(LIBS) -o DAPNETGateway
 
 %.o: %.cpp
 		$(CXX) $(CFLAGS) -c -o $@ $<
+-include $(DEPS)
 
 DAPNETGateway.o: GitVersion.h FORCE
 
