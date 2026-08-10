@@ -294,6 +294,7 @@ int CDAPNETGateway::run()
 		delete m_dapnetNetwork;
 
 		::LogError("Cannot open the DAPNET network port");
+		writeJSONLink("failed", "socket");
 
 		return 1;
 	}
@@ -307,6 +308,7 @@ int CDAPNETGateway::run()
 		delete m_dapnetNetwork;
 
 		::LogError("Cannot login to the DAPNET network");
+		writeJSONLink("failed", "socket");
 
 		return 1;
 	}
@@ -358,8 +360,10 @@ int CDAPNETGateway::run()
 		}
 
 		bool ok = m_dapnetNetwork->read();
-		if (!ok)
+		if (!ok) {
+			writeJSONLink("unlinked", "lost");
 			recover();
+		}
 
 		CPOCSAGMessage* message = m_dapnetNetwork->readMessage();
 		if (message != nullptr) {
@@ -443,6 +447,7 @@ int CDAPNETGateway::run()
 
 	LogInfo("DAPNETGateway is stopping");
 	writeJSONStatus("DAPNETGateway is stopping");
+	writeJSONLink("unlinked", "");
 
 	m_pocsagNetwork->close();
 	delete m_pocsagNetwork;
@@ -643,6 +648,6 @@ void CDAPNETGateway::writeJSONStatus(const std::string& status)
 	json["timestamp"] = CUtils::createTimestamp();
 	json["message"]   = status;
 
-	WriteJSON("status", json);
+	WriteJSON("status", json, false);
 }
 

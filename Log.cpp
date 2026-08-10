@@ -18,6 +18,7 @@
 
 #include "Log.h"
 #include "MQTTConnection.h"
+#include "Utils.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
@@ -94,14 +95,26 @@ void Log(unsigned int level, const char* fmt, ...)
 		exit(1);
 }
 
-void WriteJSON(const std::string& topLevel, nlohmann::json& json)
+void WriteJSON(const std::string& topLevel, nlohmann::json& json, bool retain)
 {
 	if (m_mqtt != nullptr) {
 		nlohmann::json top;
 
 		top[topLevel] = json;
 
-		m_mqtt->publish("json", top.dump());
+		m_mqtt->publish("json", top.dump(), retain);
 	}
+}
+
+void writeJSONLink(const std::string& action, const std::string& reason)
+{
+	nlohmann::json json;
+
+	json["timestamp"] = CUtils::createTimestamp();
+	json["action"]    = action;
+	if (!reason.empty())
+		json["reason"] = reason;
+
+	WriteJSON("link", json, true);
 }
 
