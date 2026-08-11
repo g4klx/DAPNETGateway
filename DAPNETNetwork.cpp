@@ -100,6 +100,7 @@ bool CDAPNETNetwork::read()
 		if (!m_loggedIn) {
 			m_loggedIn = true;
 			LogMessage("Logged into the DAPNET network");
+			writeJSONLink("linking", "");
 		}
 		// Time synchronisation
 		char* p = ::strchr((char*)buffer, '\n');
@@ -271,6 +272,7 @@ bool CDAPNETNetwork::parseFailedLogin(unsigned char* data)
 	assert(p != nullptr);
 
 	LogMessage("Login failed: %s", p);
+	writeJSONLink("failed", "auth");
 
 	CThread::sleep(BACKOFF[m_failCount]);
 	if (m_failCount < 9)

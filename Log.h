@@ -35,6 +35,12 @@ extern void Log(unsigned int level, const char* fmt, ...);
 extern void LogInitialise(unsigned int displayLevel, unsigned int mqttLevel);
 extern void LogFinalise();
 
-extern void WriteJSON(const std::string& topLevel, nlohmann::json& json);
+extern void WriteJSON(const std::string& topLevel, nlohmann::json& json, bool retain);
+
+// Publishes a "link" Kind directly, for connectivity events (DAPNET login
+// success/failure/loss) that CDAPNETNetwork detects but has no WriteJSON
+// access of its own (it isn't CDAPNETGateway) -- same free-function shape
+// as APRSGateway's writeJSONLink.
+extern void writeJSONLink(const std::string& action, const std::string& reason);
 
 #endif
