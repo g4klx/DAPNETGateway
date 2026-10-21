@@ -159,6 +159,9 @@ void CDAPNETNetwork::close()
 {
 	m_socket.close();
 
+	// A new connection logs in again, and says so.
+	m_loggedIn = false;
+
 	LogMessage("Closing DAPNET connection");
 }
 
