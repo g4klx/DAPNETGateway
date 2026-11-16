@@ -258,6 +258,7 @@ int CDAPNETGateway::run()
 	ret = m_mqtt->open();
 	if (!ret) {
 		delete m_mqtt;
+		m_mqtt = nullptr;
 		return -1;
 	}
 
