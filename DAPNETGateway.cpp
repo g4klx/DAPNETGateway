@@ -50,6 +50,10 @@ const char* DEFAULT_INI_FILE = "/etc/DAPNETGateway.ini";
 // In Log.cpp
 extern CMQTTConnection* m_mqtt;
 
+const unsigned int RECOVER_MIN_MS  = 1000U;
+const unsigned int RECOVER_MAX_MS  = 60000U;
+const unsigned int RECOVER_STEP_MS = 100U;
+
 static bool m_killed = false;
 static int  m_signal = 0;
 
@@ -535,15 +539,29 @@ void CDAPNETGateway::sendMessages()
 
 bool CDAPNETGateway::recover()
 {
+	// Wait before each attempt, longer each time it fails, so a DAPNET
+	// server that is down isn't hammered and the CPU isn't kept busy.
+	// The wait is in short steps so that a signal still stops us at once.
+	unsigned int delay = RECOVER_MIN_MS;
 
 	while (!m_killed) {
 		m_dapnetNetwork->close();
+
+		for (unsigned int waited = 0U; waited < delay && !m_killed; waited += RECOVER_STEP_MS)
+			CThread::sleep(RECOVER_STEP_MS);
+		if (m_killed)
+			break;
+
 		bool ok = m_dapnetNetwork->open();
 		if (ok) {
 			ok = m_dapnetNetwork->login();
 			if (ok)
 				return true;
 		}
+
+		delay *= 2U;
+		if (delay > RECOVER_MAX_MS)
+			delay = RECOVER_MAX_MS;
 	}
 
 	return false;
