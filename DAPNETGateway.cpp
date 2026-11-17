@@ -36,6 +36,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <signal.h>
+#include <pthread.h>
 #include <fcntl.h>
 #include <pwd.h>
 #endif
@@ -112,9 +113,15 @@ int main(int argc, char** argv)
 	}
 
 #if !defined(_WIN32) && !defined(_WIN64)
-	::signal(SIGINT,  sigHandler);
-	::signal(SIGTERM, sigHandler);
-	::signal(SIGHUP,  sigHandler);
+	// No SA_RESTART: a signal interrupts a blocking call, such as a
+	// connect to an unreachable DAPNET server, instead of waiting for it
+	struct sigaction act;
+	::memset(&act, 0, sizeof(act));
+	act.sa_handler = sigHandler;
+	::sigemptyset(&act.sa_mask);
+	::sigaction(SIGINT,  &act, nullptr);
+	::sigaction(SIGTERM, &act, nullptr);
+	::sigaction(SIGHUP,  &act, nullptr);
 #endif
 
 	int ret = 0;
@@ -255,7 +262,20 @@ int CDAPNETGateway::run()
 
 	std::vector<std::pair<std::string, void (*)(const unsigned char*, unsigned int)>> subscriptions;
 	m_mqtt = new CMQTTConnection(m_conf.getMQTTAddress(), m_conf.getMQTTPort(), m_conf.getMQTTName(), m_conf.getMQTTAuthEnabled(), m_conf.getMQTTUsername(), m_conf.getMQTTPassword(), subscriptions, m_conf.getMQTTKeepalive());
+#if !defined(_WIN32) && !defined(_WIN64)
+	// The MQTT thread starts with the signals blocked, so they always
+	// reach the main thread
+	sigset_t signals, old;
+	::sigemptyset(&signals);
+	::sigaddset(&signals, SIGINT);
+	::sigaddset(&signals, SIGTERM);
+	::sigaddset(&signals, SIGHUP);
+	::pthread_sigmask(SIG_BLOCK, &signals, &old);
 	ret = m_mqtt->open();
+	::pthread_sigmask(SIG_SETMASK, &old, nullptr);
+#else
+	ret = m_mqtt->open();
+#endif
 	if (!ret) {
 		delete m_mqtt;
 		return -1;
@@ -515,7 +535,7 @@ void CDAPNETGateway::sendMessages()
 bool CDAPNETGateway::recover()
 {
 
-	for (;;) {
+	while (!m_killed) {
 		m_dapnetNetwork->close();
 		bool ok = m_dapnetNetwork->open();
 		if (ok) {
